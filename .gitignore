@@ -13,6 +13,7 @@ proxy/node_modules/
 proxy/dist/
 proxy/.wrangler/
 proxy/.dev.vars
+proxy/*.log
 
 # Secrets - never commit
 *.env

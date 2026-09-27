@@ -143,7 +143,9 @@ Android app  →  your backend proxy (holds the API key)  →  OpenRouter Decisi
 | 5 | Monetization | None for now. **Cost risk flag:** a public app with no monetization and a shared paid-per-token key means all Jev usage cost lands on your OpenRouter account with no revenue offset — the rate-limiting in Section 8 is what keeps that bounded, not optional polish. |
 | 6 | Visual direction | As close to the classic 8-ball feel as possible without crossing into Mattel trademark/trade-dress territory; basic 3D, must look good. See Section 10 for the specific approach and the line being drawn. |
 
-**Still open / flag if you disagree:** backend proxy platform (proposed Cloudflare Workers, see Section 10) and the exact 3D rendering approach (real 3D engine vs. shaded pseudo-3D) — both are cheap-to-change implementation details, not architecture-defining, so I'll proceed with the proposed defaults unless you say otherwise.
+**Still open / flag if you disagree:** the exact 3D rendering approach (real 3D engine vs. shaded pseudo-3D) — cheap to change, so I'll proceed with the proposed default unless you say otherwise.
+
+**Backend proxy platform — confirmed:** Cloudflare Workers, explicitly chosen over using your existing VPS. You don't want to expose the VPS (which also runs your Hermes agent fleet) to public internet traffic from this app, so Workers stays isolated on its own infrastructure with no new attack surface on anything you already run.
 
 ## 12. Acceptance criteria — how we'll know it's done
 

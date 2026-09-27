@@ -30,12 +30,12 @@ See `plan.md` for the full plan, architecture decisions, risks, and phase checkp
 **Description:** Initialize a Cloudflare Worker project (TypeScript, via `wrangler`) with a single stub endpoint that accepts a POST with `{question, background}` and returns a hardcoded fake answer JSON. No real Jev call yet — this proves the deployment pipeline works before adding real logic.
 
 **Acceptance criteria:**
-- [ ] Worker deploys successfully to Cloudflare
-- [ ] `POST <worker-url>` with a JSON body returns a hardcoded stub JSON response
+- [x] Worker deploys successfully to Cloudflare
+- [x] `POST <worker-url>` with a JSON body returns a hardcoded stub JSON response
 
 **Verification:**
-- [ ] Build/deploy succeeds: `wrangler deploy`
-- [ ] Manual check: `curl -X POST <worker-url> -d '{"question":"test","background":"test"}'` returns the stub response
+- [x] Build/deploy succeeds: `wrangler deploy` — live at https://hunch8-proxy.hunch8.workers.dev
+- [x] Manual check: `POST` with a real body returns the stub response; missing `question` correctly returns a 400
 
 **Dependencies:** None
 

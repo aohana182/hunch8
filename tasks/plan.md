@@ -17,7 +17,7 @@ v0 delivers the full Hunch8 pipeline with the simplest possible trigger: tap the
 ### Phase 1: Foundation
 
 - [x] Task 1: Scaffold the Android app shell
-- [ ] Task 2: Scaffold the Cloudflare Worker proxy shell
+- [x] Task 2: Scaffold the Cloudflare Worker proxy shell
 - [ ] Task 3: Implement the real Jev call in the proxy
 
 ### Checkpoint: Foundation
