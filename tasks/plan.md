@@ -50,12 +50,23 @@ v0 delivers the full Hunch8 pipeline with the simplest possible trigger: tap the
 - [x] Task 9: Rate limiting / abuse prevention on the proxy
 - [ ] Task 10: Attribution screen ("powered by Jev")
 - [ ] Task 11: Privacy policy screen + link
+- [ ] Task 12: App icon and launcher branding
+- [ ] Task 13: Release signing and Play Console setup
+- [ ] Task 14: Play Integrity API hardening
+- [ ] Task 15: Guard against oversized input
+- [ ] Task 16: Crash reporting
 
 ### Checkpoint: Release-ready
-- [ ] Burst of requests past the proxy's cap gets throttled (manually verified)
+- [x] Burst of requests past the proxy's cap gets throttled (manually verified)
 - [ ] No API key anywhere in the built APK (spot-checked via `apktool` or similar)
 - [ ] Privacy policy present and linked
+- [ ] Real launcher icon in place, release build signed with a real key
 - [ ] All PRD Section 12 (v0) acceptance criteria met
+
+### Roadmap (v0.1 and later, not yet scheduled)
+- Shake-to-ask as an alternate trigger alongside the tap
+- Voice input for the question/context field
+- Answer history, monetization, alternate visual themes — out of scope per PRD Section 9
 
 ## Risks and Mitigations
 

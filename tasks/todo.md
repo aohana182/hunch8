@@ -275,9 +275,121 @@ See `plan.md` for the full plan, architecture decisions, risks, and phase checkp
 
 ---
 
-## CHECKPOINT: Release-ready (after Tasks 9–11)
-- [ ] Burst of requests past the proxy's cap gets throttled (manually verified)
+## Task 12: App icon and launcher branding
+
+**Description:** Design/produce real launcher icon assets (adaptive icon: foreground + background layers) matching Hunch8's actual visual identity (dark ball, amber accent, navy background), replacing the current default Android icon — the one visible briefly during the splash screen today.
+
+**Acceptance criteria:**
+- [ ] Real launcher icon shows in the app drawer and during the open-app splash — no more generic Android robot placeholder
+- [ ] Icon reflects the app's actual identity, not a generic shape
+
+**Verification:**
+- [ ] Manual check: install and confirm the icon renders correctly in the launcher and splash on the emulator
+
+**Dependencies:** None
+
+**Files likely touched:**
+- `android/app/src/main/res/mipmap-*/`
+- `android/app/src/main/AndroidManifest.xml`
+
+**Estimated scope:** S–M (mostly asset creation, not logic)
+
+---
+
+## Task 13: Release signing and Play Console setup
+
+**Description:** Generate a real release keystore (owned by Avi — never committed to git), add a release signing config to Gradle, and enroll in Play App Signing. Separately, fill in the Play Console's Data Safety form (declaring that question text is sent to a third-party API — OpenRouter/TypeSafe) and the content rating questionnaire. Most of this is account/ownership work only Avi can do; the Gradle signing config can be scaffolded once a keystore exists.
+
+**Acceptance criteria:**
+- [ ] Release build is signed with a real key, not the debug keystore
+- [ ] Play Console Data Safety form accurately reflects what the app actually sends
+- [ ] Content rating questionnaire completed
+
+**Verification:**
+- [ ] Manual check: `./gradlew bundleRelease` produces a signed, installable release artifact
+
+**Dependencies:** None (needs Avi to own the Play Console account and the keystore)
+
+**Files likely touched:**
+- `android/app/build.gradle.kts` (signing config)
+- a new, gitignored keystore file
+
+**Estimated scope:** M (mostly admin work, not code)
+
+---
+
+## Task 14: Play Integrity API hardening
+
+**Description:** Add Play Integrity API (or Firebase App Check) attestation so the proxy only serves requests that actually came from the signed app, tightening the current per-IP rate limit against a script hitting the proxy endpoint directly (bypassing the app entirely).
+
+**Acceptance criteria:**
+- [ ] Proxy rejects requests without a valid attestation token once enabled
+- [ ] Legitimate app requests are unaffected
+
+**Verification:**
+- [ ] Manual check: a raw script request to the proxy without an attestation token is rejected
+
+**Dependencies:** Task 9
+
+**Files likely touched:**
+- `proxy/src/index.ts`
+- Android client (attestation token generation)
+
+**Estimated scope:** M
+
+---
+
+## Task 15: Guard against oversized input
+
+**Description:** Jev's context window is 32,000 tokens. Nothing currently stops a user from pasting something huge into the single input field, which would fail on Jev's side rather than being caught gracefully client-side.
+
+**Acceptance criteria:**
+- [ ] The input field enforces a sane max character count, with visible feedback when hit
+- [ ] Oversized input never reaches an ungraceful Jev API error
+
+**Verification:**
+- [ ] Manual check: paste a very long block of text and confirm it's handled (truncation or a friendly limit message), not a raw failure
+
+**Dependencies:** Task 4
+
+**Files likely touched:**
+- `android/app/src/main/java/.../MainScreen.kt`
+
+**Estimated scope:** S
+
+---
+
+## Task 16: Crash reporting
+
+**Description:** Add basic crash reporting (Firebase Crashlytics or similar). Right now there is zero visibility into real-world crashes on users' devices — a public release with no observability means silent failures.
+
+**Acceptance criteria:**
+- [ ] A deliberately forced test crash appears in the crash reporting dashboard
+
+**Verification:**
+- [ ] Manual check: trigger a test crash and confirm it's captured
+
+**Dependencies:** None
+
+**Estimated scope:** S–M
+
+---
+
+## CHECKPOINT: Release-ready (after Tasks 9–16)
+- [x] Burst of requests past the proxy's cap gets throttled (manually verified)
 - [ ] No API key anywhere in the built APK (spot-checked via `apktool` or similar)
 - [ ] Privacy policy present and linked
+- [ ] Real launcher icon in place
+- [ ] Release build signed with a real key, Play Console Data Safety + content rating filled in
 - [ ] All PRD Section 12 (v0) acceptance criteria met
 - [ ] Final review with Avi before this is considered v0-done
+
+---
+
+## Roadmap — not yet scheduled (v0.1 and later)
+
+Kept as a short list, not full task cards, since none of these are being actively worked yet — per the planning process, breaking these into full acceptance-criteria cards is premature until one is actually picked up.
+
+- **Shake-to-ask (v0.1):** phone-shake as an alternate trigger alongside the tap, using the accelerometer (PRD Section 4/13). The tap-only v0 was a deliberate scope cut to prove the Jev pipeline first — this was always the planned next step, not a new idea.
+- **Voice input:** let the user speak the question/context instead of typing it (Android's built-in speech-to-text). Not yet scoped in detail — would need a mic permission, a speech-recognition flow, and a decision on whether it replaces or supplements the text field.
+- Answer history, monetization, alternate visual themes — already out of scope per PRD Section 9, unchanged.

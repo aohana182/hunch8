@@ -171,8 +171,10 @@ This cost the proxy a real debugging cycle (Task 3 initially crashed on `data.an
 
 ## 13. Roadmap
 
-- **v0:** tap-to-ask, full Jev pipeline through the backend proxy, the 20 canonical answers, basic 3D ball, privacy policy, rate-limited proxy. This is the whole product minus the gesture.
+- **v0 (core, done):** tap-to-ask, full Jev pipeline through the backend proxy, the 20 canonical answers via the Score primitive, ball with a real 8-ball look, rate-limited proxy (50/IP/day), distinct rate-limit vs. network-error states, help popup.
+- **v0 (remaining, release-readiness — tasks/todo.md Tasks 10–16):** attribution screen, privacy policy, a real launcher icon (still the default Android icon today), release signing + Play Console setup (Data Safety form, content rating — mostly Avi's own account work), Play Integrity API hardening, a guard against oversized input, and basic crash reporting. None of this is optional polish — it's what's left before this could actually go live on the Play Store.
 - **v0.1:** add phone-shake as an alternate trigger alongside the tap (not a replacement) — self-contained addition, doesn't touch the pipeline built in v0.
+- **v0.1+ (not yet scoped in detail):** voice input for the question/context field, using Android's built-in speech-to-text instead of typing.
 - **Later / unscheduled:** answer history, monetization, alternate visual themes — all explicitly out of scope until revisited (Section 9).
 
 ## Sources
