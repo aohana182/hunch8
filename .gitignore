@@ -21,4 +21,16 @@ proxy/*.log
 # Secrets - never commit
 *.env
 .env*
+!.env.example
 **/openrouter.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.sw?

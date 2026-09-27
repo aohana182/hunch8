@@ -168,7 +168,7 @@ Added after Avi asked for protection against inappropriate/hateful questions. Im
 
 **3D rendering approach — decided (2026-09-27):** shaded-2D, not a real 3D engine. Skipped the Filament/SceneView attempt entirely — a single static sphere with two animations (idle breathing scale, thinking wobble) doesn't justify the added dependency, model assets, and native library integration a real 3D engine brings. The ball is a `Canvas`-drawn circle with a radial gradient (offset highlight simulating a light source) plus a thin amber rim-light stroke, which reads convincingly as a lit sphere. Palette is dark charcoal/amber (`Hunch8Theme`), deliberately distinct from both Mattel's blue Magic 8-Ball trade dress and the generic "AI aesthetic" purple that Material3's default theme would have produced.
 
-**Backend proxy platform — confirmed:** Cloudflare Workers, explicitly chosen over using your existing VPS. You don't want to expose the VPS (which also runs your Hermes agent fleet) to public internet traffic from this app, so Workers stays isolated on its own infrastructure with no new attack surface on anything you already run.
+**Backend proxy platform — confirmed:** Cloudflare Workers, explicitly chosen over self-hosting on an existing server, to avoid exposing that server to public traffic from this app. Workers stays isolated on its own infrastructure with no new attack surface on anything else.
 
 ## 12. Acceptance criteria — how we'll know it's done
 
