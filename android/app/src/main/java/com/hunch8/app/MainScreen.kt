@@ -6,10 +6,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -18,6 +23,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import com.hunch8.app.network.Hunch8Result
@@ -32,6 +38,7 @@ fun MainScreen() {
     var question by remember { mutableStateOf("") }
     var ballState by remember { mutableStateOf(BallState.IDLE) }
     var answerText by remember { mutableStateOf("") }
+    var showHelp by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
 
@@ -42,7 +49,22 @@ fun MainScreen() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
-        Text("Hunch8", style = MaterialTheme.typography.headlineMedium)
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                "Hunch8",
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.align(Alignment.Center),
+            )
+            IconButton(
+                onClick = { showHelp = true },
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .size(32.dp)
+                    .clip(CircleShape),
+            ) {
+                Text("?", style = MaterialTheme.typography.titleMedium, color = Hunch8Amber)
+            }
+        }
 
         OutlinedTextField(
             value = question,
@@ -78,4 +100,27 @@ fun MainScreen() {
             )
         }
     }
+
+    if (showHelp) {
+        HelpDialog(onDismiss = { showHelp = false })
+    }
+}
+
+@Composable
+private fun HelpDialog(onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("How to use Hunch8") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("• Ask: type a yes/no question, plus any context that helps decide it.")
+                Text("• Trigger: tap the ball.")
+                Text("• Result: it rolls over and floats up one answer.")
+                Text("• Requirement: needs internet — every answer is a live call.")
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Got it") }
+        },
+    )
 }
