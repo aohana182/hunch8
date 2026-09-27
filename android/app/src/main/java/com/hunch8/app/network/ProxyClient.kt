@@ -1,5 +1,6 @@
 package com.hunch8.app.network
 
+import com.hunch8.app.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -9,7 +10,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import java.io.IOException
 
-private const val PROXY_URL = "https://hunch8-proxy.hunch8.workers.dev"
+private const val PROXY_URL = BuildConfig.PROXY_URL
 private val JSON_MEDIA_TYPE = "application/json".toMediaType()
 
 data class Hunch8Answer(val answer: String, val confidence: Double)

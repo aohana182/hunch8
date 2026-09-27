@@ -50,7 +50,7 @@ Real request/response traces, including the failures, are in [evals/traces.md](e
 
 ## Quick start
 
-You need your own OpenRouter API key and a Cloudflare account. The app in this repo points at the author's proxy, so to run your own copy you deploy the proxy first and then point the app at it.
+You need your own OpenRouter API key and a Cloudflare account. This repo ships with a placeholder proxy address, so you deploy your own proxy first and then point the app at it (see [Proxy address](#proxy-address)).
 
 **1. Proxy (Cloudflare Worker)**
 
@@ -74,15 +74,26 @@ npm run deploy
 
 **2. Android app**
 
-Set `PROXY_URL` in `android/app/src/main/java/com/hunch8/app/network/ProxyClient.kt` to your Worker's URL, then:
-
 ```sh
 cd android
+cp local.properties.example local.properties   # set hunch8.proxyUrl to your Worker's URL
 ./gradlew assembleDebug
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
 Requires JDK 17+ and the Android SDK (compileSdk 35, minSdk 26).
+
+### Proxy address
+
+The app sends every question to one address: your proxy. That address is **not** stored in the code. It lives in `android/local.properties`, which git ignores:
+
+```properties
+hunch8.proxyUrl=https://your-worker.your-subdomain.workers.dev
+```
+
+At build time, Gradle reads that line and bakes the address into the app as `BuildConfig.PROXY_URL`, which `ProxyClient.kt` uses. If the file or the line is missing, the build still succeeds but uses the placeholder `https://YOUR-WORKER.YOUR-SUBDOMAIN.workers.dev`, and every question shows "App not responding".
+
+The address isn't a secret the way the API key is, because anyone holding a built APK can read it out of the app. Keeping it out of the repo just means the public code doesn't advertise a live endpoint. What actually protects the proxy is that the OpenRouter key never leaves Cloudflare, and the 50-questions-per-IP-per-day limit. If you run your own copy, also set a credit limit on your OpenRouter key to cap the worst case.
 
 ---
 
@@ -91,6 +102,7 @@ Requires JDK 17+ and the Android SDK (compileSdk 35, minSdk 26).
 | Variable | Where | Description |
 |---|---|---|
 | `OPENROUTER_API_KEY` | `proxy/.dev.vars` locally, `wrangler secret put` in production | OpenRouter key used to call Jev. Never goes in the app. |
+| `hunch8.proxyUrl` | `android/local.properties` (gitignored) | Address of your deployed proxy, baked into the app at build time. See [Proxy address](#proxy-address). |
 
 The rate-limit store is a Workers KV namespace bound as `RATE_LIMIT_KV` in `proxy/wrangler.toml`.
 

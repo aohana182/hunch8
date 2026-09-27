@@ -34,7 +34,7 @@ cd android && ./gradlew assembleDebug
 Voice input, shake-to-ask (planned for v0.1), answer history, accounts, monetization, answers outside the 20 classic phrases.
 
 ## Gotchas
-- `PROXY_URL` is hardcoded in `ProxyClient.kt` and points at the author's Worker.
+- The proxy address comes from `hunch8.proxyUrl` in the gitignored `android/local.properties`, injected as `BuildConfig.PROXY_URL`. Missing → placeholder URL → every ask fails as "App not responding". Never hardcode a real address in tracked files.
 - `wrangler.toml` contains the author's KV namespace id; replace it with your own (`npx wrangler kv namespace create RATE_LIMIT_KV`).
 - Test files import with an explicit `.ts` extension (required by Node's native TS stripping) and are excluded from `tsc --noEmit`.
 - On Windows, `curl` to Cloudflare can fail TLS revocation checks; use `--ssl-no-revoke`, or `node --use-system-ca` for fetch.

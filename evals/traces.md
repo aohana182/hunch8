@@ -1,6 +1,6 @@
 # Hunch8 eval traces — 2026-09-27
 
-14 real traces run against the **live deployed proxy** (`https://hunch8-proxy.hunch8.workers.dev`), using the exact request shape the real Android app sends: one merged `question` field, `background` always `""`. Not simulated, not fabricated — every request/response pair below is copy-pasted from an actual run. Cost varied because it's the same call fetching the proxy's real `usage.cost` each time.
+14 real traces run against the author's **live deployed proxy** (its address is kept out of this repo — see the README's "Proxy address" section), using the exact request shape the real Android app sends: one merged `question` field, `background` always `""`. Not simulated, not fabricated — every request/response pair below is copy-pasted from an actual run. Cost varied because it's the same call fetching the proxy's real `usage.cost` each time.
 
 **Result: 13 pass, 1 fail.**
 

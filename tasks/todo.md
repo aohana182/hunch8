@@ -34,7 +34,7 @@ See `plan.md` for the full plan, architecture decisions, risks, and phase checkp
 - [x] `POST <worker-url>` with a JSON body returns a hardcoded stub JSON response
 
 **Verification:**
-- [x] Build/deploy succeeds: `wrangler deploy` — live at https://hunch8-proxy.hunch8.workers.dev
+- [x] Build/deploy succeeds: `wrangler deploy` — live at https://YOUR-WORKER.YOUR-SUBDOMAIN.workers.dev
 - [x] Manual check: `POST` with a real body returns the stub response; missing `question` correctly returns a 400
 
 **Dependencies:** None
@@ -73,7 +73,7 @@ See `plan.md` for the full plan, architecture decisions, risks, and phase checkp
 ---
 
 ## CHECKPOINT: Foundation (after Tasks 1–3)
-- [x] Proxy deployed and returns a real Jev-backed answer via `curl`/fetch (https://hunch8-proxy.hunch8.workers.dev)
+- [x] Proxy deployed and returns a real Jev-backed answer via `curl`/fetch (https://YOUR-WORKER.YOUR-SUBDOMAIN.workers.dev)
 - [x] Android app builds and runs an empty shell on the emulator
 - [ ] Review with Avi before proceeding
 

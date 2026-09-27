@@ -1,0 +1,4 @@
+# Copy to local.properties (gitignored) and set your own Cloudflare Worker URL.
+# The app sends every question to this address. Without it the build falls back
+# to a placeholder and every ask shows "App not responding".
+hunch8.proxyUrl=https://YOUR-WORKER.YOUR-SUBDOMAIN.workers.dev
