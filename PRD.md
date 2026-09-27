@@ -21,7 +21,7 @@ Classic 8-ball apps pick uniformly at random. Hunch8 sends the user's actual que
 
 **v0 (trigger = tap):**
 
-1. User opens the app → sees two fields: **"What's the question?"** (short, required) and **"Give it some background"** (longer free text, optional but encouraged), with the ball rendered below/beside them.
+1. User opens the app → sees one field, **"Ask a question and provide some context"** (merged from two separate question/background fields after real-device testing), with the ball below showing its "8" face.
 2. User taps the ball.
 3. App shows a brief "shaking ball" animation + haptic feedback while the request is in flight.
 4. App calls Jev (via the backend proxy) with a single `choice` question whose 20 options are the canonical 8-ball answers, and `state` = question + background.
@@ -40,6 +40,8 @@ Classic 8-ball apps pick uniformly at random. Hunch8 sends the user's actual que
 **Negative (5):** Don't count on it · My reply is no · My sources say no · Outlook not so good · Very doubtful
 
 ## 6. Jev integration — technical design
+
+> **Superseded 2026-09-27: Score primitive, not Choice.** The Choice design below (20 labels as criteria) gave wrong answers in testing, e.g. it told someone with a 39° fever to go to a concert, and it always returned the identical phrase for the same question. The proxy now asks Jev a `score` question on a 5-level no→yes scale (`proxy/src/jev.ts`). The resulting score (0–4) maps to one of five strength bands of the 20 classic phrases, and one phrase is picked at random within the band. Instructions tell Jev that for "X or Y?" questions, yes means X. In a 7-case test set, 6 now match common sense with 0.7–0.99 confidence. Cost per call is roughly halved (~$0.000017), since 20 criteria are no longer sent. The Choice sections below are kept for history.
 
 Grounded directly in OpenRouter's Jev docs (fetched 2026-09-27); verify against live docs again before implementation since this is an alpha surface.
 

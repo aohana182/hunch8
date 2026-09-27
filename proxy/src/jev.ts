@@ -1,82 +1,83 @@
-const ANSWERS: Record<string, { phrase: string; hint: string }> = {
-  it_is_certain: { phrase: "It is certain", hint: "The background makes this an obvious, undeniable yes with no real doubt" },
-  it_is_decidedly_so: { phrase: "It is decidedly so", hint: "Background strongly and decisively favors yes" },
-  without_a_doubt: { phrase: "Without a doubt", hint: "Yes with total certainty, no hesitation at all" },
-  yes_definitely: { phrase: "Yes, definitely", hint: "Confident, clear affirmative" },
-  you_may_rely_on_it: { phrase: "You may rely on it", hint: "Yes, and it's a dependable, safe bet" },
-  as_i_see_it_yes: { phrase: "As I see it, yes", hint: "Leaning yes based on interpretation of the background, slightly more subjective" },
-  most_likely: { phrase: "Most likely", hint: "Probably yes, but not fully certain" },
-  outlook_good: { phrase: "Outlook good", hint: "Things look favorable overall, moderate positive" },
-  yes: { phrase: "Yes", hint: "Plain, simple affirmative with no elaboration needed" },
-  signs_point_to_yes: { phrase: "Signs point to yes", hint: "Indirect evidence in the background suggests yes, mild positive" },
-  reply_hazy: { phrase: "Reply hazy, try again", hint: "Background is too vague, thin, or contradictory to give a real answer" },
-  ask_again_later: { phrase: "Ask again later", hint: "Not enough information right now, or the timing is wrong to call it" },
-  better_not_tell_you_now: { phrase: "Better not tell you now", hint: "An answer exists but revealing it now would be premature or unwise" },
-  cannot_predict_now: { phrase: "Cannot predict now", hint: "Genuinely unpredictable given the current information" },
-  concentrate_and_ask_again: { phrase: "Concentrate and ask again", hint: "The question itself is unclear or underthought and needs refining" },
-  dont_count_on_it: { phrase: "Don't count on it", hint: "Leaning no, unreliable, don't bank on it" },
-  my_reply_is_no: { phrase: "My reply is no", hint: "Plain, simple negative" },
-  my_sources_say_no: { phrase: "My sources say no", hint: "The context/background itself points to no" },
-  outlook_not_so_good: { phrase: "Outlook not so good", hint: "Unfavorable overall trend" },
-  very_doubtful: { phrase: "Very doubtful", hint: "Strong skepticism, unlikely to happen" },
-};
+// Jev's Score primitive rates the answer on an ordered no→yes scale; the 20
+// classic phrases are grouped into strength bands along that scale and one is
+// picked at random within the band, so repeat questions vary like a real 8-ball.
+const BANDS: { maxScore: number; phrases: string[] }[] = [
+  { maxScore: 0.8, phrases: ["My reply is no", "My sources say no", "Very doubtful"] },
+  { maxScore: 1.5, phrases: ["Don't count on it", "Outlook not so good"] },
+  {
+    maxScore: 2.5,
+    phrases: [
+      "Reply hazy, try again",
+      "Ask again later",
+      "Better not tell you now",
+      "Cannot predict now",
+      "Concentrate and ask again",
+    ],
+  },
+  { maxScore: 3.2, phrases: ["As I see it, yes", "Most likely", "Outlook good", "Yes", "Signs point to yes"] },
+  {
+    maxScore: Infinity,
+    phrases: ["It is certain", "It is decidedly so", "Without a doubt", "Yes, definitely", "You may rely on it"],
+  },
+];
+
+const LEVELS = ["Definitely no", "Probably no", "Impossible to tell", "Probably yes", "Definitely yes"];
+
+const INSTRUCTIONS =
+  "Rate how strongly the answer to the asker's question is yes. " +
+  "If the question offers two options ('X or Y?'), yes means the first option X and no means the second option Y. " +
+  "Decide from any context the asker gives and plain common sense about what is actually best for the asker. " +
+  "Use the middle only when there is genuinely nothing to go on.";
 
 const JEV_MODEL = "typesafe/jev-1.13";
 const JEV_ENDPOINT = "https://openrouter.ai/api/alpha/decisions";
 
-export interface JevChoiceResult {
+export interface JevResult {
   answer: string;
   confidence: number;
   cost: number;
 }
 
-export async function askJev(apiKey: string, question: string, background: string): Promise<JevChoiceResult> {
-  const criteria: Record<string, string> = {};
-  for (const [key, { hint }] of Object.entries(ANSWERS)) {
-    criteria[key] = hint;
-  }
+export function phraseForScore(score: number, random: () => number = Math.random): string {
+  const band = BANDS.find((b) => score < b.maxScore)!;
+  return band.phrases[Math.floor(random() * band.phrases.length)];
+}
 
-  const requestBody = {
-    model: JEV_MODEL,
-    state: `Question: ${question}\nBackground: ${background || "(none given)"}`,
-    questions: {
-      answer: {
-        type: "choice",
-        instructions:
-          "Pick the 8-ball answer that best fits the asker's question and background. Commit to one — don't hedge.",
-        criteria,
-      },
-    },
-  };
-
+export async function askJev(apiKey: string, question: string, background: string): Promise<JevResult> {
   const response = await fetch(JEV_ENDPOINT, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${apiKey}`,
     },
-    body: JSON.stringify(requestBody),
+    body: JSON.stringify({
+      model: JEV_MODEL,
+      state: background
+        ? `Question: ${question}\nContext: ${background}`
+        : `The asker's question, with any context they gave: ${question}`,
+      questions: {
+        verdict: { type: "score", instructions: INSTRUCTIONS, criteria: LEVELS },
+      },
+    }),
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Jev request failed: ${response.status} ${errorText}`);
+    throw new Error(`Jev request failed: ${response.status} ${await response.text()}`);
   }
 
   const data = await response.json<{
-    answers: { answer: { choice: string; confidence: number } };
+    answers: { verdict: { score: number; confidence: number } };
     usage?: { cost?: number };
   }>();
 
-  const choiceKey = data.answers.answer.choice;
-  const mapped = ANSWERS[choiceKey];
-  if (!mapped) {
-    throw new Error(`Jev returned an unrecognized choice key: ${choiceKey}`);
+  const { score, confidence } = data.answers.verdict;
+  if (typeof score !== "number") {
+    throw new Error("Jev returned no score");
   }
 
   return {
-    answer: mapped.phrase,
-    confidence: data.answers.answer.confidence,
+    answer: phraseForScore(score),
+    confidence,
     cost: data.usage?.cost ?? 0,
   };
 }

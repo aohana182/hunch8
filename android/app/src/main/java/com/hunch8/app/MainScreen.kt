@@ -1,6 +1,7 @@
 package com.hunch8.app
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,6 +18,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import com.hunch8.app.network.Hunch8Result
 import com.hunch8.app.network.ProxyClient
@@ -28,15 +30,10 @@ import kotlinx.coroutines.launch
 @Composable
 fun MainScreen() {
     var question by remember { mutableStateOf("") }
-    var background by remember { mutableStateOf("") }
     var ballState by remember { mutableStateOf(BallState.IDLE) }
     var answerText by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
-
-    val fieldColors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = Hunch8Amber,
-        focusedLabelColor = Hunch8Amber,
-    )
+    val focusManager = LocalFocusManager.current
 
     Column(
         modifier = Modifier
@@ -50,35 +47,35 @@ fun MainScreen() {
         OutlinedTextField(
             value = question,
             onValueChange = { question = it },
-            label = { Text("What's the question?") },
-            colors = fieldColors,
+            label = { Text("Ask a question and provide some context") },
+            minLines = 3,
+            maxLines = 6,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Hunch8Amber,
+                focusedLabelColor = Hunch8Amber,
+            ),
             modifier = Modifier.fillMaxWidth(),
         )
 
-        OutlinedTextField(
-            value = background,
-            onValueChange = { background = it },
-            label = { Text("Give it some background") },
-            colors = fieldColors,
-            modifier = Modifier.fillMaxWidth(),
-        )
-
-        BallComposable(
-            state = ballState,
-            answerText = answerText,
-            onTap = {
-                if (question.isBlank() || ballState == BallState.THINKING) return@BallComposable
-                ballState = BallState.THINKING
-                scope.launch {
-                    ballState = when (val result = ProxyClient.ask(question, background)) {
-                        is Hunch8Result.Success -> {
-                            answerText = result.answer.answer
-                            BallState.ANSWERED
+        Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+            BallComposable(
+                state = ballState,
+                answerText = answerText,
+                onTap = {
+                    if (question.isBlank() || ballState == BallState.THINKING) return@BallComposable
+                    focusManager.clearFocus()
+                    ballState = BallState.THINKING
+                    scope.launch {
+                        ballState = when (val result = ProxyClient.ask(question, "")) {
+                            is Hunch8Result.Success -> {
+                                answerText = result.answer.answer
+                                BallState.ANSWERED
+                            }
+                            is Hunch8Result.NetworkError -> BallState.ERROR
                         }
-                        is Hunch8Result.NetworkError -> BallState.ERROR
                     }
-                }
-            },
-        )
+                },
+            )
+        }
     }
 }
