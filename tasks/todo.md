@@ -84,13 +84,13 @@ See `plan.md` for the full plan, architecture decisions, risks, and phase checkp
 **Description:** Add a plain Compose UI with two text fields (question, background) and a plain "Ask" button (temporary stand-in for the ball — replaced visually in Task 6). Wire an OkHttp/Retrofit client that POSTs to the deployed proxy URL and displays the raw returned answer text below the button. This is the ugly-but-working version of the full pipeline.
 
 **Acceptance criteria:**
-- [ ] Typing a question and background, then tapping "Ask," sends a real request to the deployed proxy
-- [ ] The returned answer phrase renders as plain text on screen
-- [ ] A loading indicator shows while the request is in flight
+- [x] Typing a question and background, then tapping "Ask," sends a real request to the deployed proxy
+- [x] The returned answer phrase renders as plain text on screen
+- [x] A loading indicator shows while the request is in flight
 
 **Verification:**
-- [ ] Build succeeds: `./gradlew assembleDebug`
-- [ ] Manual check: on the emulator, run through the flow with 3+ different questions and confirm real (varied) answers appear
+- [x] Build succeeds: `./gradlew assembleDebug`
+- [x] Manual check: ran 3 different questions through the actual app UI on the emulator — "Will it rain tomorrow?" (storm forecast) → "It is decidedly so"; "Should I invest in this stock?" (company bankrupt) → "My sources say no"; "Will I pass the exam?" (studied hard) → "It is decidedly so". All contextually sensible, all varied.
 
 **Dependencies:** Task 1, Task 3
 
@@ -108,11 +108,15 @@ See `plan.md` for the full plan, architecture decisions, risks, and phase checkp
 **Description:** Deliberately test edge cases of the question/background → answer mapping to confirm the full contract holds: empty background, very short question, contradictory background, very long background near the token limit. Fix any mismatches between the proxy's key↔phrase mapping and what the client expects to display.
 
 **Acceptance criteria:**
-- [ ] All 20 canonical phrases are reachable in principle (spot-check a handful actually appear across varied inputs; not required to force all 20 in one test pass)
-- [ ] No malformed/unmapped answer ever reaches the UI (a proxy error or unrecognized key shows the error state from Task 8, not garbage text)
+- [x] All 20 canonical phrases are reachable in principle (7 distinct phrases observed across ~9 test calls so far, spanning affirmative/non-committal/negative)
+- [x] No malformed/unmapped answer ever reaches the UI (structurally guaranteed: `jev.ts` throws if the returned key isn't in the 20-answer map, caught and turned into a 502 the client renders as an error, never garbage text)
 
 **Verification:**
-- [ ] Manual check: run the 4 edge-case inputs above through the emulator and confirm sane behavior each time
+- [x] Manual check, all 4 edge cases against the live proxy:
+  - Empty background ("Is she interested in me?") → "Reply hazy, try again" (0.8 confidence)
+  - Very short question, no background ("Luck?") → "Reply hazy, try again"
+  - Deliberately self-contradictory background → "Reply hazy, try again" (0.9 confidence — correctly read as unresolvable, not an arbitrary pick)
+  - ~4,800-word background with a clear signal buried in repetitive filler → correctly extracted the actual signal ("My sources say no" for a "will it rain" question whose background concluded "no rain expected"), no errors, cost scaled proportionally ($0.00025 vs. ~$0.00003 for short calls)
 
 **Dependencies:** Task 4
 
@@ -125,7 +129,7 @@ See `plan.md` for the full plan, architecture decisions, risks, and phase checkp
 ---
 
 ## CHECKPOINT: Core flow proven (after Tasks 4–5)
-- [ ] Typing a question, tapping the stand-in "Ask" button, and seeing one of the exact 20 canonical phrases render works on the emulator, backed by a real Jev call
+- [x] Typing a question, tapping the stand-in "Ask" button, and seeing one of the exact 20 canonical phrases render works on the emulator, backed by a real Jev call
 - [ ] This is the point where the hardest technical risk is retired — review with Avi before investing in visual polish
 
 ---

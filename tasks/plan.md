@@ -27,11 +27,11 @@ v0 delivers the full Hunch8 pipeline with the simplest possible trigger: tap the
 
 ### Phase 2: Core vertical slice (walking skeleton)
 
-- [ ] Task 4: Wire the app to the proxy with placeholder UI
-- [ ] Task 5: Confirm the 20-answer contract end-to-end
+- [x] Task 4: Wire the app to the proxy with placeholder UI
+- [x] Task 5: Confirm the 20-answer contract end-to-end
 
 ### Checkpoint: Core flow proven
-- [ ] Typing a question, tapping the stand-in "Ask" button, and seeing one of the exact 20 canonical phrases render, works on the emulator, backed by a real Jev call
+- [x] Typing a question, tapping the stand-in "Ask" button, and seeing one of the exact 20 canonical phrases render, works on the emulator, backed by a real Jev call
 - [ ] Review with Avi before proceeding to Phase 3 (this is the point where the hard technical risk is retired)
 
 ### Phase 3: v0 UX
