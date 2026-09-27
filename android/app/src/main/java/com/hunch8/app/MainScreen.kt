@@ -93,6 +93,7 @@ fun MainScreen() {
                                 answerText = result.answer.answer
                                 BallState.ANSWERED
                             }
+                            is Hunch8Result.RateLimited -> BallState.RATE_LIMITED
                             is Hunch8Result.NetworkError -> BallState.ERROR
                         }
                     }

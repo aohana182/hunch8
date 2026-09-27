@@ -54,17 +54,21 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-enum class BallState { IDLE, THINKING, ANSWERED, ERROR }
+enum class BallState { IDLE, THINKING, ANSWERED, ERROR, RATE_LIMITED }
 
 private val BallSize = 300.dp
 private const val WINDOW_RADIUS = 0.6f // fraction of the ball's radius
 private const val EIGHT_RADIUS = 0.36f
 private val LightPosition = Offset(0.34f, 0.28f) // fraction of the ball's size
 
+private enum class TriangleStyle { NORMAL, ERROR, RATE_LIMITED }
+
 private val TriangleTop = Color(0xFF2E4390)
 private val TriangleBottom = Color(0xFF17245A)
 private val TriangleErrorTop = Color(0xFF7A3328)
 private val TriangleErrorBottom = Color(0xFF4A1C16)
+private val TriangleRateLimitTop = Color(0xFF8A6A2E)
+private val TriangleRateLimitBottom = Color(0xFF4A3714)
 private val AnswerTextColor = Color(0xFFE6ECF7)
 
 @Composable
@@ -88,7 +92,7 @@ fun BallComposable(
     LaunchedEffect(state, answerText) {
         when (state) {
             BallState.THINKING -> reveal.animateTo(0f, tween(220))
-            BallState.ANSWERED, BallState.ERROR -> {
+            BallState.ANSWERED, BallState.ERROR, BallState.RATE_LIMITED -> {
                 snapshotFlow { flip.value }.first { it >= 180f }
                 reveal.snapTo(0f)
                 reveal.animateTo(1f, spring(dampingRatio = 0.45f, stiffness = Spring.StiffnessVeryLow))
@@ -116,7 +120,8 @@ fun BallComposable(
         BallState.IDLE -> "Magic ball. Tap to ask."
         BallState.THINKING -> "The ball is thinking"
         BallState.ANSWERED -> "The ball says: $answerText"
-        BallState.ERROR -> "Needs internet"
+        BallState.ERROR -> "The app isn't responding"
+        BallState.RATE_LIMITED -> "Daily limit reached, come back tomorrow"
     }
 
     Box(modifier = modifier.size(BallSize, BallSize + 36.dp), contentAlignment = Alignment.TopCenter) {
@@ -168,9 +173,14 @@ fun BallComposable(
             }
 
             if (flip.value >= 180f) {
+                val (text, style) = when (state) {
+                    BallState.ERROR -> "App not\nresponding" to TriangleStyle.ERROR
+                    BallState.RATE_LIMITED -> "Daily limit\nreached" to TriangleStyle.RATE_LIMITED
+                    else -> answerText to TriangleStyle.NORMAL
+                }
                 FloatingAnswer(
-                    text = if (state == BallState.ERROR) "Needs internet" else answerText,
-                    isError = state == BallState.ERROR,
+                    text = text,
+                    style = style,
                     progress = reveal.value,
                     windowDiameter = BallSize * WINDOW_RADIUS,
                 )
@@ -182,7 +192,7 @@ fun BallComposable(
 }
 
 @Composable
-private fun FloatingAnswer(text: String, isError: Boolean, progress: Float, windowDiameter: Dp) {
+private fun FloatingAnswer(text: String, style: TriangleStyle, progress: Float, windowDiameter: Dp) {
     if (progress <= 0.01f) return
     val circumradius = windowDiameter / 2f * 0.9f
     Box(
@@ -209,11 +219,12 @@ private fun FloatingAnswer(text: String, isError: Boolean, progress: Float, wind
                 lineTo(center.x, center.y + rc)
                 close()
             }
-            val brush = Brush.verticalGradient(
-                colors = if (isError) listOf(TriangleErrorTop, TriangleErrorBottom) else listOf(TriangleTop, TriangleBottom),
-                startY = center.y - rc / 2f,
-                endY = center.y + rc,
-            )
+            val colors = when (style) {
+                TriangleStyle.NORMAL -> listOf(TriangleTop, TriangleBottom)
+                TriangleStyle.ERROR -> listOf(TriangleErrorTop, TriangleErrorBottom)
+                TriangleStyle.RATE_LIMITED -> listOf(TriangleRateLimitTop, TriangleRateLimitBottom)
+            }
+            val brush = Brush.verticalGradient(colors = colors, startY = center.y - rc / 2f, endY = center.y + rc)
             drawPath(path, brush)
             drawPath(path, brush, style = Stroke(width = 10f, join = StrokeJoin.Round))
         }
