@@ -46,7 +46,7 @@ fun MainScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp),
+            .padding(start = 24.dp, end = 24.dp, bottom = 24.dp, top = 56.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
@@ -70,7 +70,20 @@ fun MainScreen() {
         OutlinedTextField(
             value = question,
             onValueChange = { question = it },
-            label = { Text("Ask a question and provide some context") },
+            label = {
+                Text(
+                    "Ask a question and provide some context",
+                    style = MaterialTheme.typography.titleMedium,
+                )
+            },
+            textStyle = MaterialTheme.typography.titleLarge,
+            trailingIcon = {
+                if (question.isNotEmpty()) {
+                    IconButton(onClick = { question = "" }) {
+                        Text("✕", style = MaterialTheme.typography.titleMedium, color = Hunch8Amber)
+                    }
+                }
+            },
             minLines = 3,
             maxLines = 6,
             colors = OutlinedTextFieldDefaults.colors(
