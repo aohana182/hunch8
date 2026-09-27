@@ -48,7 +48,7 @@ v0 delivers the full Hunch8 pipeline with the simplest possible trigger: tap the
 ### Phase 4: Public-release readiness
 
 - [x] Task 9: Rate limiting / abuse prevention on the proxy
-- [ ] Task 10: Attribution screen ("powered by Jev")
+- [x] Task 10: Attribution screen ("powered by Jev") — folded into the help popup
 - [ ] Task 11: Privacy policy screen + link
 - [ ] Task 12: App icon and launcher branding
 - [ ] Task 13: Release signing and Play Console setup

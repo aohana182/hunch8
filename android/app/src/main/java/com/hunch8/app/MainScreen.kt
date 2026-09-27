@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -118,6 +119,16 @@ private fun HelpDialog(onDismiss: () -> Unit) {
                 Text("• Trigger: tap the ball.")
                 Text("• Result: it rolls over and floats up one answer.")
                 Text("• Requirement: needs internet — every answer is a live call.")
+
+                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+                Text("Powered by Jev", style = MaterialTheme.typography.titleSmall, color = Hunch8Amber)
+                Text(
+                    "Jev is a decision model from TypeSafe, via OpenRouter. It doesn't " +
+                        "generate text like a chatbot — it rates your question and returns a " +
+                        "probability, which Hunch8 turns into one of the 20 classic answers. " +
+                        "That's the difference from a random pick: it's an actual judgment call.",
+                )
             }
         },
         confirmButton = {

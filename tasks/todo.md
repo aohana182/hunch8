@@ -239,17 +239,19 @@ See `plan.md` for the full plan, architecture decisions, risks, and phase checkp
 
 **Description:** Add a simple settings/about screen showing "powered by Jev (TypeSafe, via OpenRouter)" attribution, per PRD Section 8. No API key entry UI needed (PRD Section 10 — no user-facing key entry in the shared-key model).
 
+**Folded into the help popup (2026-09-27)** rather than a separate about screen: the original 4-bullet help dialog explained *how* to use the app but never mentioned Jev at all — missing the entire point of the app being built on a real decision model, not a random picker. Added a "Powered by Jev" section to the same `HelpDialog` (`MainScreen.kt`) with attribution plus a short explanation of what Jev actually is (a Score-based decision model, not a chatbot). This satisfies the attribution requirement without a second screen to navigate to.
+
 **Acceptance criteria:**
-- [ ] An about/settings screen is reachable from the main screen and shows the attribution text
+- [x] The attribution text ("powered by Jev... via OpenRouter") is reachable from the main screen
+- [x] Explains what Jev is, not just that it's used — this was the actual point of the requirement, not just a legal credit line
 
 **Verification:**
-- [ ] Manual check: navigate to the screen on the emulator and confirm the text is present and correct
+- [x] Manual check: opened the help popup on the emulator, confirmed the "Powered by Jev" section renders correctly below a divider, full text legible
 
 **Dependencies:** Task 1
 
-**Files likely touched:**
-- `android/app/src/main/java/.../ui/AboutScreen.kt` (new)
-- `android/app/src/main/java/.../MainScreen.kt` (navigation entry point)
+**Files touched:**
+- `android/app/src/main/java/com/hunch8/app/MainScreen.kt` (`HelpDialog`)
 
 **Estimated scope:** S
 
