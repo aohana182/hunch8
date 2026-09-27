@@ -80,13 +80,5 @@ fun MainScreen() {
                 }
             },
         )
-
-        val statusText = when (ballState) {
-            BallState.IDLE -> if (question.isBlank()) "Type a question, then tap the ball" else "Tap the ball"
-            BallState.THINKING -> "Thinking…"
-            BallState.ANSWERED -> answerText
-            BallState.ERROR -> "Needs internet"
-        }
-        Text(statusText, style = MaterialTheme.typography.bodyMedium)
     }
 }

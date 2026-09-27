@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,6 +30,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
@@ -43,28 +45,50 @@ fun BallComposable(
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "ball")
 
-    val idleScale by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.03f,
+    // Slow idle tumble: real 3D perspective rotation (rotationX/Y with a camera
+    // distance), not a flat 2D spin — this is what actually reads as a sphere
+    // turning in space rather than a static icon.
+    val idleRotationY by infiniteTransition.animateFloat(
+        initialValue = -12f,
+        targetValue = 12f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1600, easing = LinearEasing),
+            animation = tween(2600, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse,
         ),
-        label = "idleScale",
+        label = "idleRotationY",
     )
-
-    val thinkingRotation by infiniteTransition.animateFloat(
-        initialValue = -8f,
-        targetValue = 8f,
+    val idleRotationX by infiniteTransition.animateFloat(
+        initialValue = -5f,
+        targetValue = 5f,
         animationSpec = infiniteRepeatable(
-            animation = tween(180, easing = LinearEasing),
+            animation = tween(3400, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse,
         ),
-        label = "thinkingRotation",
+        label = "idleRotationX",
     )
 
-    val scale = if (state == BallState.IDLE) idleScale else 1f
-    val rotation = if (state == BallState.THINKING) thinkingRotation else 0f
+    val thinkingRotationZ by infiniteTransition.animateFloat(
+        initialValue = -10f,
+        targetValue = 10f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(160, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "thinkingRotationZ",
+    )
+    val thinkingRotationX by infiniteTransition.animateFloat(
+        initialValue = -14f,
+        targetValue = 14f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(220, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "thinkingRotationX",
+    )
+
+    val rotationX = if (state == BallState.THINKING) thinkingRotationX else idleRotationX
+    val rotationY = if (state == BallState.THINKING) 0f else idleRotationY
+    val rotationZ = if (state == BallState.THINKING) thinkingRotationZ else 0f
 
     val description = when (state) {
         BallState.IDLE -> "Tap to ask Hunch8"
@@ -75,23 +99,38 @@ fun BallComposable(
 
     Box(
         modifier = modifier
-            .size(220.dp)
-            .graphicsLayer(scaleX = scale, scaleY = scale, rotationZ = rotation)
+            .size(240.dp)
+            .graphicsLayer {
+                this.rotationX = rotationX
+                this.rotationY = rotationY
+                this.rotationZ = rotationZ
+                cameraDistance = 16f * density
+            }
             .clip(CircleShape)
             .clickable(enabled = state != BallState.THINKING) { onTap() }
             .semantics { contentDescription = description },
         contentAlignment = Alignment.Center,
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            val center = Offset(size.width * 0.32f, size.height * 0.28f)
-            val radius = size.minDimension * 0.85f
+            val highlightCenter = Offset(size.width * 0.30f, size.height * 0.24f)
             drawCircle(
                 brush = Brush.radialGradient(
-                    colors = listOf(Color(0xFF3A322A), Color(0xFF1A1512), Color(0xFF0A0806)),
-                    center = center,
-                    radius = radius,
+                    colors = listOf(Hunch8BallHighlight, Color(0xFF0A0A0A), Hunch8BallShadow),
+                    center = highlightCenter,
+                    radius = size.minDimension * 0.95f,
                 ),
                 radius = size.minDimension / 2f,
+            )
+            // Specular shine: a tight, soft highlight blob so a black sphere on a
+            // black window still reads as glossy and 3D rather than a flat disc.
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(Color.White.copy(alpha = 0.16f), Color.Transparent),
+                    center = highlightCenter,
+                    radius = size.minDimension * 0.22f,
+                ),
+                radius = size.minDimension * 0.22f,
+                center = highlightCenter,
             )
             drawCircle(
                 color = Hunch8Amber.copy(alpha = 0.18f),
@@ -100,37 +139,43 @@ fun BallComposable(
             )
         }
 
+        // Window sits in the lower third, off-center and non-circular — avoids
+        // the centered-circle-on-circle "eye" look and echoes (without copying)
+        // the real toy's low window placement.
         Box(
             modifier = Modifier
-                .size(120.dp)
-                .clip(CircleShape)
-                .background(Color(0xFF050505))
-                .padding(12.dp),
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 28.dp)
+                .size(width = 168.dp, height = 108.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .background(Color.Black)
+                .padding(10.dp),
             contentAlignment = Alignment.Center,
         ) {
             AnimatedContent(targetState = state, label = "ballWindow") { windowState ->
                 when (windowState) {
                     BallState.IDLE -> Text(
                         "ask me",
-                        color = Hunch8Amber.copy(alpha = 0.6f),
-                        style = MaterialTheme.typography.labelMedium,
+                        color = Hunch8Amber.copy(alpha = 0.7f),
+                        style = MaterialTheme.typography.titleMedium,
                     )
                     BallState.THINKING -> Text(
                         "···",
                         color = Hunch8Amber,
-                        style = MaterialTheme.typography.headlineSmall,
+                        style = MaterialTheme.typography.headlineMedium,
                     )
                     BallState.ANSWERED -> Text(
                         answerText,
                         color = Hunch8OnBackground,
                         textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        style = MaterialTheme.typography.titleLarge,
                     )
                     BallState.ERROR -> Text(
-                        "needs\ninternet",
+                        "needs internet",
                         color = Hunch8Error,
                         textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.labelMedium,
+                        style = MaterialTheme.typography.titleMedium,
                     )
                 }
             }

@@ -15,6 +15,9 @@ proxy/.wrangler/
 proxy/.dev.vars
 proxy/*.log
 
+# Built APKs - regenerable, keep out of git
+*.apk
+
 # Secrets - never commit
 *.env
 .env*
