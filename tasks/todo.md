@@ -388,6 +388,48 @@ See `plan.md` for the full plan, architecture decisions, risks, and phase checkp
 
 ---
 
+## Task 17: Fix state loss on rotation/process death
+
+**Description:** `question`, `ballState`, `answerText`, `showHelp` used `remember`, not `rememberSaveable` — rotating the phone or Android reclaiming the app in the background lost everything, including an answer just received.
+
+**Done:** switched all four to `rememberSaveable` (works with zero custom `Saver` — `BallState` is a Kotlin enum, which is `Serializable` by default). Added a `LaunchedEffect(Unit)` guard: a restored `THINKING` state means the process was killed mid-request, so the coroutine that would have completed it is gone — resets to `IDLE` rather than staying stuck forever.
+
+**Verified:** typed a question, backgrounded the app, `adb shell am kill` on its real process (confirmed via empty `pidof`), relaunched via the launcher task (not a fresh `am start -n`, so it's a true process recreation, not just resuming an existing one) — the question text survived. The `THINKING`-recovery guard is reasoned-correct by inspection; the actual race window (process killed mid-network-call) is too short to reliably trigger via adb.
+
+---
+
+## Task 18: Unit tests for the score→phrase band mapping
+
+**Description:** `phraseForScore` (`proxy/src/jev.ts`) is a pure function with hard-coded band boundaries and no automated coverage — every prior check was indirect, via live API calls.
+
+**Done:** `proxy/src/jev.test.ts`, run via Node's native test runner (`node --test`, zero new dependencies — Node 24 strips TS type annotations natively, just needs the explicit `.ts` extension in the relative import). Covers exact band boundaries, out-of-range scores, that the random pick stays inside the right band, that every phrase in a band is reachable, and (added after Task 20 below) the confidence-override behavior. `npm test` script added; test files excluded from the Worker's own `tsc --noEmit` scope since they're never part of the deployed bundle.
+
+**Extended (2026-09-27, per the test-driven-development skill's pyramid):** applying the pyramid honestly, `rateLimit.ts` — the actual 50/day cap — had zero automated coverage; it was only ever verified manually via live `wrangler kv key put`. Added `proxy/src/rateLimit.test.ts` using a real in-memory fake `KVNamespace` (preferred over a mock per the skill: exercises the real get/parse/compare/put logic, not method-call assertions). Covers the exact 50/51 boundary, sustained blocking past the limit, per-client isolation, and the `"unknown"` client-id fallback. Deliberately did **not** add a DI-based integration test for `index.ts`'s routing (would need `askJev` refactored to be injectable purely to enable the test) — that routing is already covered by extensive real manual traces across every status code path (`evals/traces.md` plus Task 8/9 verification), and forcing a refactor just to enable a test felt like over-engineering glue code for this project's size.
+
+**Verified:** `npm test` — 11/11 passing (6 score-mapping + 5 rate-limiter).
+
+---
+
+## Task 19: Content moderation guardrail
+
+**Description:** Avi asked for protection against inappropriate/hateful/racist questions, with a clear, distinct error rather than answering them.
+
+**Done:** a second Jev question (`flagged`, a `noul` primitive) is asked in the same request as the normal score — no added latency or API call. `flagged.noul >= 0.5` throws `JevBlockedError` → proxy returns `422 {"error":"blocked"}` → app shows a bold red "✕" directly over the ball's "8" face (no flip/reveal — this is a refusal, not an answer, so it's deliberately a different visual language than the answer/rate-limit/error triangles). Separately tested 3 prompt-injection attempts trying to bypass the guardrail or force a favorable score — all failed; decided not to add anti-injection code given that evidence (see PRD Section 6.2).
+
+**Verified:** end-to-end through the real deployed proxy and the real app on the emulator — a hateful question shows the red X, a normal question afterward still flows correctly back to a real answer. Full traces in `evals/traces.md` cases 12–14.
+
+---
+
+## Task 20: Fix confidence-blindness in the phrase mapping
+
+**Description:** Found via `evals/traces.md` trace #9: a score in the top band produced "Without a doubt" while Jev's own `confidence` was 0.5 (coin-flip) — the mapping never looked at confidence, only score.
+
+**Done:** confidence below 0.6 now forces the non-committal band regardless of score. Covered by 2 new unit tests (Task 18's suite) using the exact real confidence values from traces #9 and #14.
+
+**Verified:** `npm test` passing; redeployed and spot-checked live.
+
+---
+
 ## Roadmap — not yet scheduled (v0.1 and later)
 
 Kept as a short list, not full task cards, since none of these are being actively worked yet — per the planning process, breaking these into full acceptance-criteria cards is premature until one is actually picked up.
