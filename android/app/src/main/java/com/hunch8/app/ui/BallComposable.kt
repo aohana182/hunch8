@@ -54,7 +54,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-enum class BallState { IDLE, THINKING, ANSWERED, ERROR, RATE_LIMITED }
+enum class BallState { IDLE, THINKING, ANSWERED, ERROR, RATE_LIMITED, BLOCKED }
 
 private val BallSize = 300.dp
 private const val WINDOW_RADIUS = 0.6f // fraction of the ball's radius
@@ -70,6 +70,7 @@ private val TriangleErrorBottom = Color(0xFF4A1C16)
 private val TriangleRateLimitTop = Color(0xFF8A6A2E)
 private val TriangleRateLimitBottom = Color(0xFF4A3714)
 private val AnswerTextColor = Color(0xFFE6ECF7)
+private val BlockedRed = Color(0xFFD8483A)
 
 @Composable
 fun BallComposable(
@@ -84,8 +85,10 @@ fun BallComposable(
     val flip = remember { Animatable(0f) }
     val reveal = remember { Animatable(0f) }
 
+    // BLOCKED is a refusal, not an answer - the ball never flips to show a
+    // window for it, it just stays on its "8" face with a red X over it.
     LaunchedEffect(state) {
-        if (state != BallState.IDLE && flip.value < 180f) {
+        if (state != BallState.IDLE && state != BallState.BLOCKED && flip.value < 180f) {
             flip.animateTo(180f, tween(750, easing = FastOutSlowInEasing))
         }
     }
@@ -97,8 +100,13 @@ fun BallComposable(
                 reveal.snapTo(0f)
                 reveal.animateTo(1f, spring(dampingRatio = 0.45f, stiffness = Spring.StiffnessVeryLow))
             }
-            BallState.IDLE -> Unit
+            BallState.IDLE, BallState.BLOCKED -> Unit
         }
+    }
+
+    val blockedAlpha = remember { Animatable(0f) }
+    LaunchedEffect(state) {
+        blockedAlpha.animateTo(if (state == BallState.BLOCKED) 1f else 0f, tween(200))
     }
 
     val infinite = rememberInfiniteTransition(label = "ball")
@@ -122,6 +130,7 @@ fun BallComposable(
         BallState.ANSWERED -> "The ball says: $answerText"
         BallState.ERROR -> "The app isn't responding"
         BallState.RATE_LIMITED -> "Daily limit reached, come back tomorrow"
+        BallState.BLOCKED -> "Hunch8 won't answer that"
     }
 
     Box(modifier = modifier.size(BallSize, BallSize + 36.dp), contentAlignment = Alignment.TopCenter) {
@@ -187,6 +196,20 @@ fun BallComposable(
             }
 
             Canvas(modifier = Modifier.fillMaxSize()) { drawGloss() }
+
+            if (blockedAlpha.value > 0.01f) {
+                Text(
+                    "✕",
+                    color = BlockedRed,
+                    fontSize = 100.sp,
+                    fontWeight = FontWeight.Black,
+                    modifier = Modifier.graphicsLayer {
+                        alpha = blockedAlpha.value
+                        scaleX = 0.7f + 0.3f * blockedAlpha.value
+                        scaleY = scaleX
+                    },
+                )
+            }
         }
     }
 }

@@ -17,6 +17,7 @@ data class Hunch8Answer(val answer: String, val confidence: Double)
 sealed class Hunch8Result {
     data class Success(val answer: Hunch8Answer) : Hunch8Result()
     object RateLimited : Hunch8Result()
+    object Blocked : Hunch8Result()
     object NetworkError : Hunch8Result()
 }
 
@@ -36,6 +37,7 @@ object ProxyClient {
         try {
             client.newCall(request).execute().use { response ->
                 if (response.code == 429) return@withContext Hunch8Result.RateLimited
+                if (response.code == 422) return@withContext Hunch8Result.Blocked
                 if (!response.isSuccessful) return@withContext Hunch8Result.NetworkError
                 val body = response.body?.string() ?: return@withContext Hunch8Result.NetworkError
                 val json = JSONObject(body)
