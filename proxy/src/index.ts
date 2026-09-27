@@ -1,4 +1,4 @@
-import { askJev } from "./jev";
+import { askJev, JevBlockedError } from "./jev";
 import { checkAndIncrement, type RateLimitEnv } from "./rateLimit";
 
 export interface Env extends RateLimitEnv {
@@ -32,6 +32,9 @@ export default {
       const result = await askJev(env.OPENROUTER_API_KEY, body.question, body.background ?? "");
       return Response.json(result);
     } catch (err) {
+      if (err instanceof JevBlockedError) {
+        return Response.json({ error: "blocked" }, { status: 422 });
+      }
       console.error("Jev call failed", err);
       return Response.json({ error: "Jev call failed" }, { status: 502 });
     }
