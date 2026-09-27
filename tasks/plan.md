@@ -47,7 +47,7 @@ v0 delivers the full Hunch8 pipeline with the simplest possible trigger: tap the
 
 ### Phase 4: Public-release readiness
 
-- [ ] Task 9: Rate limiting / abuse prevention on the proxy
+- [x] Task 9: Rate limiting / abuse prevention on the proxy
 - [ ] Task 10: Attribution screen ("powered by Jev")
 - [ ] Task 11: Privacy policy screen + link
 

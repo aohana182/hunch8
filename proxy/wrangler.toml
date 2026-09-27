@@ -1,3 +1,7 @@
 name = "hunch8-proxy"
 main = "src/index.ts"
 compatibility_date = "2024-09-25"
+
+[[kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "eecbb8d9fbc84de4b4a30dd3614764a8"

@@ -1,6 +1,7 @@
 import { askJev } from "./jev";
+import { checkAndIncrement, type RateLimitEnv } from "./rateLimit";
 
-export interface Env {
+export interface Env extends RateLimitEnv {
   OPENROUTER_API_KEY: string;
 }
 
@@ -8,6 +9,12 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     if (request.method !== "POST") {
       return new Response("Method not allowed", { status: 405 });
+    }
+
+    const clientId = request.headers.get("cf-connecting-ip") ?? "unknown";
+    const allowed = await checkAndIncrement(env, clientId);
+    if (!allowed) {
+      return Response.json({ error: "daily limit reached" }, { status: 429 });
     }
 
     let body: { question?: string; background?: string };

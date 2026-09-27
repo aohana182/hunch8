@@ -214,12 +214,15 @@ See `plan.md` for the full plan, architecture decisions, risks, and phase checkp
 
 **Description:** Add a per-IP (or per-device, if a lightweight device identifier is easy to add) daily request cap to the Worker, using Cloudflare KV or a Durable Object as the counter store. This is a hard requirement for a public app fronting a shared paid key (PRD Section 8), not optional polish.
 
+**Decision:** per-IP, not per-device — there's no accounts/login system, so IP (via Cloudflare's `cf-connecting-ip` header) is the practical stand-in for "user." Cloudflare's native Workers rate-limiting binding only supports 10s/60s windows (verified against current docs), not a daily one, so the daily cap is hand-rolled: a KV counter keyed by `${ip}:${YYYY-MM-DD}`, incremented per request, with a 25-hour TTL so old keys self-clean. Not billing-grade atomic (KV is eventually consistent across edge locations), an acceptable trade for a 50/day novelty cap versus Durable Objects' complexity.
+
 **Acceptance criteria:**
-- [ ] Requests past the configured daily cap are rejected with a clear error, not silently dropped or passed through
-- [ ] Cap is configurable (a constant or env var), not hardcoded in multiple places
+- [x] Requests past the configured daily cap are rejected with a clear error (`429 {"error":"daily limit reached"}`), not silently dropped or passed through
+- [x] Cap is configurable (single `DAILY_LIMIT` constant in `rateLimit.ts`), not hardcoded in multiple places
 
 **Verification:**
-- [ ] Manual check: script a burst of requests past the cap and confirm the later ones are throttled
+- [x] Manual check: rather than burning 50 real Jev calls, set my own IP's counter directly via `wrangler kv key put` to 49, then confirmed request #50 succeeds (200) and #51 is blocked (429) — exact boundary confirmed, then reset the counter afterward
+- [x] Confirmed current Workers KV free-tier limits before committing to this approach (100k reads/day, 1,000 writes/day) — fine for expected usage, worth knowing as a ceiling if this ever gets real traffic
 
 **Dependencies:** Task 3
 

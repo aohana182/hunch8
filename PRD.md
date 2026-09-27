@@ -113,7 +113,7 @@ This cost the proxy a real debugging cycle (Task 3 initially crashed on `data.an
 - **v0:** tap target on the ball itself (not a separate button) that triggers the ask, with a debounce (~1–2s) so a rapid double-tap doesn't double-fire.
 - Visible "thinking" state while the network call is in flight (it is not instant).
 - On network failure or API error: show an explicit **"Needs internet"**-style message. Do not crash, and do not silently fall back to a fake local answer.
-- **Abuse prevention on the proxy**, since it's a public app fronting a shared paid key. At minimum: per-device/per-IP rate limiting (e.g., a sane daily cap on requests). Recommended: Play Integrity API (or Firebase App Check) so the proxy only serves requests that actually came from your signed app, not a script hitting the endpoint directly. Exact mechanism is an implementation-time decision, but "some throttle exists before launch" is non-negotiable given the cost model.
+- **Abuse prevention on the proxy** — **implemented 2026-09-27**: a 50-requests-per-IP-per-day cap, enforced via a Cloudflare KV counter keyed by `${ip}:${date}` (`proxy/src/rateLimit.ts`). Per-IP rather than per-device since there's no accounts/login to hang a device identity off of. Native Workers rate-limiting only supports 10s/60s windows, so the daily cap is hand-rolled. Still recommended before a wide public launch: Play Integrity API (or Firebase App Check) so the proxy only serves requests that actually came from the signed app, not a script hitting the endpoint directly — not yet built.
 - Settings/about screen showing "powered by Jev (TypeSafe, via OpenRouter)" attribution.
 - A privacy policy screen/link, required by Play Store since user-entered text is sent to a third-party API.
 
