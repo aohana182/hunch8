@@ -36,13 +36,13 @@ v0 delivers the full Hunch8 pipeline with the simplest possible trigger: tap the
 
 ### Phase 3: v0 UX
 
-- [ ] Task 6: Ball visual + tap gesture + reveal animation
-- [ ] Task 7: Basic 3D rendering spike for the ball
-- [ ] Task 8: Network-failure handling ("needs internet")
+- [x] Task 6: Ball visual + tap gesture + reveal animation
+- [x] Task 7: Basic 3D rendering spike for the ball
+- [x] Task 8: Network-failure handling ("needs internet")
 
 ### Checkpoint: v0 UX complete
-- [ ] Full user-facing flow (question → background → tap ball → thinking animation → answer reveal) feels right on the emulator
-- [ ] Airplane-mode test shows the error message without crashing
+- [x] Full user-facing flow (question → background → tap ball → thinking animation → answer reveal) feels right on the emulator
+- [x] Airplane-mode test shows the error message without crashing
 - [ ] Review with Avi before proceeding to Phase 4
 
 ### Phase 4: Public-release readiness

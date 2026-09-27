@@ -5,10 +5,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -16,31 +15,35 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.hunch8.app.network.Hunch8Result
 import com.hunch8.app.network.ProxyClient
+import com.hunch8.app.ui.BallComposable
+import com.hunch8.app.ui.BallState
+import com.hunch8.app.ui.Hunch8Amber
 import kotlinx.coroutines.launch
-
-private sealed class UiState {
-    object Idle : UiState()
-    object Loading : UiState()
-    data class Answered(val text: String) : UiState()
-    object Error : UiState()
-}
 
 @Composable
 fun MainScreen() {
     var question by remember { mutableStateOf("") }
     var background by remember { mutableStateOf("") }
-    var uiState by remember { mutableStateOf<UiState>(UiState.Idle) }
+    var ballState by remember { mutableStateOf(BallState.IDLE) }
+    var answerText by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
+
+    val fieldColors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = Hunch8Amber,
+        focusedLabelColor = Hunch8Amber,
+    )
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         Text("Hunch8", style = MaterialTheme.typography.headlineMedium)
 
@@ -48,6 +51,7 @@ fun MainScreen() {
             value = question,
             onValueChange = { question = it },
             label = { Text("What's the question?") },
+            colors = fieldColors,
             modifier = Modifier.fillMaxWidth(),
         )
 
@@ -55,30 +59,34 @@ fun MainScreen() {
             value = background,
             onValueChange = { background = it },
             label = { Text("Give it some background") },
+            colors = fieldColors,
             modifier = Modifier.fillMaxWidth(),
         )
 
-        Button(
-            onClick = {
-                if (question.isBlank()) return@Button
-                uiState = UiState.Loading
+        BallComposable(
+            state = ballState,
+            answerText = answerText,
+            onTap = {
+                if (question.isBlank() || ballState == BallState.THINKING) return@BallComposable
+                ballState = BallState.THINKING
                 scope.launch {
-                    uiState = when (val result = ProxyClient.ask(question, background)) {
-                        is Hunch8Result.Success -> UiState.Answered(result.answer.answer)
-                        is Hunch8Result.NetworkError -> UiState.Error
+                    ballState = when (val result = ProxyClient.ask(question, background)) {
+                        is Hunch8Result.Success -> {
+                            answerText = result.answer.answer
+                            BallState.ANSWERED
+                        }
+                        is Hunch8Result.NetworkError -> BallState.ERROR
                     }
                 }
             },
-            enabled = question.isNotBlank() && uiState !is UiState.Loading,
-        ) {
-            Text("Ask")
-        }
+        )
 
-        when (val state = uiState) {
-            is UiState.Loading -> CircularProgressIndicator()
-            is UiState.Answered -> Text(state.text, style = MaterialTheme.typography.headlineSmall)
-            is UiState.Error -> Text("Needs internet")
-            is UiState.Idle -> Unit
+        val statusText = when (ballState) {
+            BallState.IDLE -> if (question.isBlank()) "Type a question, then tap the ball" else "Tap the ball"
+            BallState.THINKING -> "Thinking…"
+            BallState.ANSWERED -> answerText
+            BallState.ERROR -> "Needs internet"
         }
+        Text(statusText, style = MaterialTheme.typography.bodyMedium)
     }
 }

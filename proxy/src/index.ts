@@ -10,7 +10,12 @@ export default {
       return new Response("Method not allowed", { status: 405 });
     }
 
-    const body = await request.json<{ question?: string; background?: string }>();
+    let body: { question?: string; background?: string };
+    try {
+      body = await request.json();
+    } catch {
+      return Response.json({ error: "invalid JSON body" }, { status: 400 });
+    }
 
     if (!body.question) {
       return Response.json({ error: "question is required" }, { status: 400 });
