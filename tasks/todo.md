@@ -52,14 +52,14 @@ See `plan.md` for the full plan, architecture decisions, risks, and phase checkp
 **Description:** Replace the stub with the real integration: the Worker takes `{question, background}`, builds a Decisions API `choice` request over the 20 canonical answers (per PRD Section 6's request shape), calls `POST https://openrouter.ai/api/alpha/decisions` with the OpenRouter API key held as a Worker secret, and returns `{answer: <phrase>, confidence: <number>}` to the caller (mapping the returned key back to the display phrase server-side, so the client never needs the key↔phrase table). Also confirm real per-token pricing on the live model page now that an API key is in hand (PRD flagged this as unverified).
 
 **Acceptance criteria:**
-- [ ] A real question + background produces a real Jev-selected answer (one of the exact 20 phrases), not a stub
-- [ ] Response includes `usage.cost` from the underlying Jev response so real cost-per-call is observable
-- [ ] API key is stored via `wrangler secret`, not committed to any file in the repo
+- [x] A real question + background produces a real Jev-selected answer (one of the exact 20 phrases), not a stub
+- [x] Response includes `cost` derived from the underlying Jev response's `usage.cost`, so real cost-per-call is observable
+- [x] API key is stored via `wrangler secret put`, not committed to any file in the repo
 
 **Verification:**
-- [ ] Manual check: `curl` the deployed Worker with several different question/background pairs and confirm varied, plausible answers come back (not always the same one)
-- [ ] Manual check: confirm the API key does not appear in `git diff` / any committed file
-- [ ] Confirm real Jev input-token price from `https://openrouter.ai/typesafe/jev-1.13` (or the OpenRouter dashboard) and note it in `PRD.md` Section 6, replacing the "not independently confirmed" flag
+- [x] Manual check: tested 5 different question/background pairs against both local (`wrangler dev` + `.dev.vars`) and the live deployment — answers were varied and plausible (e.g. no-runway startup → "My sources say no"; empty background → "Reply hazy, try again"; strong positive weather background → "It is decidedly so")
+- [x] Manual check: confirmed via `git diff --staged` scan that the key never appears in any committed file; `.dev.vars` is gitignored
+- [x] Real pricing: `typesafe/jev-1.13` isn't in OpenRouter's public model catalog (only `typesafe/jev-router` is, with dynamic pricing), so there's no static rate to confirm. Used real measured `usage.cost` instead ($0.000015–$0.000034/call observed) and noted this in `PRD.md` Section 6, replacing the "not independently confirmed" flag. Also caught and fixed a real bug this way: the docs' example response shape was wrong (flat `answer` vs. actual nested `answers.answer`) — found by reading the live response directly instead of re-guessing after the first failure.
 
 **Dependencies:** Task 2
 
@@ -73,8 +73,8 @@ See `plan.md` for the full plan, architecture decisions, risks, and phase checkp
 ---
 
 ## CHECKPOINT: Foundation (after Tasks 1–3)
-- [ ] Proxy deployed and returns a real Jev-backed answer via `curl`
-- [ ] Android app builds and runs an empty shell on the emulator
+- [x] Proxy deployed and returns a real Jev-backed answer via `curl`/fetch (https://hunch8-proxy.hunch8.workers.dev)
+- [x] Android app builds and runs an empty shell on the emulator
 - [ ] Review with Avi before proceeding
 
 ---

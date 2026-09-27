@@ -18,11 +18,11 @@ v0 delivers the full Hunch8 pipeline with the simplest possible trigger: tap the
 
 - [x] Task 1: Scaffold the Android app shell
 - [x] Task 2: Scaffold the Cloudflare Worker proxy shell
-- [ ] Task 3: Implement the real Jev call in the proxy
+- [x] Task 3: Implement the real Jev call in the proxy
 
 ### Checkpoint: Foundation
-- [ ] Proxy deployed and returns a real Jev-backed answer when hit with `curl`
-- [ ] Android app builds and runs an empty shell on the emulator
+- [x] Proxy deployed and returns a real Jev-backed answer when hit with `curl`
+- [x] Android app builds and runs an empty shell on the emulator
 - [ ] Review with Avi before proceeding to Phase 2
 
 ### Phase 2: Core vertical slice (walking skeleton)

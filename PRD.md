@@ -53,7 +53,7 @@ Android app  →  your backend proxy (holds the API key)  →  OpenRouter Decisi
 - **Endpoint (called by your proxy, not the app):** `POST https://openrouter.ai/api/alpha/decisions`
 - **Auth:** standard OpenRouter API key, Bearer header, held only in the proxy's server-side config/secrets — never sent to or stored on the device
 - **Context limit:** 32,000 tokens (question + background + instructions all count)
-- **Pricing:** billed per input token at the rate on Jev's model page; output tokens are free; every response includes `usage.cost` in USD. **Exact per-token price was not independently confirmed** (the model page 404'd on fetch) — check `https://openrouter.ai/typesafe/jev-1.13` directly before shipping, don't hardcode an assumed number.
+- **Pricing — confirmed by direct measurement (2026-09-27):** `typesafe/jev-1.13` does not appear in OpenRouter's public `/api/v1/models` catalog (only `typesafe/jev-router`, a different dynamically-priced model, is listed there), so there's no published flat rate to read off a page. Real observed cost per call, with a ~400–600 token prompt carrying all 20 answer criteria: **$0.000015–$0.000034 per request**. Each response's own `usage.cost` field is the authoritative source of truth — don't hardcode an assumed rate, read it from the response if per-user cost tracking is ever needed.
 
 **Request shape:**
 ```json
@@ -75,18 +75,24 @@ Android app  →  your backend proxy (holds the API key)  →  OpenRouter Decisi
 }
 ```
 
-**Response shape (choice type):**
+**Response shape (choice type) — corrected from the live API, 2026-09-27.** The docs' summarized example was wrong on one key point: the per-question answer is nested under an `answers` object keyed by the question name (`answer`, matching the request), not flat at the top level. Confirmed by direct testing against the real endpoint:
 ```json
 {
-  "answer": {
-    "type": "choice",
-    "choice": "it_is_certain",
-    "probabilities": { "it_is_certain": 0.41, "reply_hazy": 0.12, "...": "..." },
-    "confidence": 0.63
+  "model": "typesafe/jev-1.13-20260917",
+  "answers": {
+    "answer": {
+      "type": "choice",
+      "choice": "it_is_certain",
+      "probabilities": { "it_is_certain": 0.97, "reply_hazy": 0.03, "my_reply_is_no": 0 },
+      "confidence": 0.95
+    }
   },
-  "usage": { "cost": 0.00021 }
+  "usage": { "input_tokens": 371, "output_tokens": 51, "cost": 0.000015582 },
+  "id": "gen-dec-...",
+  "provider": "TypeSafe"
 }
 ```
+This cost the proxy a real debugging cycle (Task 3 initially crashed on `data.answer.choice` being undefined) — worth remembering that docs for an alpha API surface can be summarized/inaccurate, and the live response is the ground truth.
 
 - App maps the returned `choice` key back to its display string (the 20 keys ↔ 20 phrases mapping lives client-side, not sent as free text each time — cheaper and avoids Jev inventing off-list wording).
 - `confidence` is available for optional UI flourish (e.g., a more dramatic animation on high confidence) — not required for v1.
