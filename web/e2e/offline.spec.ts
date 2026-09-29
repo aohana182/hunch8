@@ -2,7 +2,16 @@ import { test, expect } from "@playwright/test";
 
 test.use({ serviceWorkers: "allow", reducedMotion: "reduce" });
 
-test("after one visit the app opens offline, and asking says the app isn't responding", async ({ page, context }) => {
+test("after one visit the app opens offline, and asking says the app isn't responding", async ({
+  page,
+  context,
+  browserName,
+}) => {
+  // Playwright's WebKit fails page.reload() under setOffline with a generic
+  // "internal error" (CI, 2026-09-30), so this can't tell us anything about
+  // Safari there. Offline on iPhone is checked on a real device instead
+  // (tasks/todo-web.md, Checkpoint C); Chromium covers the worker logic.
+  test.skip(browserName === "webkit", "offline reload unsupported in Playwright WebKit - verify on a real iPhone");
   await page.goto("/");
   // Wait until the worker has installed (precache done) and controls the page.
   await page.evaluate(async () => {
