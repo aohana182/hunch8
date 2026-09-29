@@ -61,7 +61,7 @@ After that: screen parity, the PWA features (installable, works offline), and fi
 - [x] Task 10: Screen parity: header, help dialog (with Privacy and Disclaimer links), text field, draft kept in `sessionStorage`, responsive layout
 - [x] Task 11: Icons from the screenshot, manifest, iOS meta tags
 - [x] Task 12: Service worker: the app opens offline and shows "App not responding" when asked
-- [ ] Task 13: One-time deploy setup: Pages project, repo secrets (the Android author), `production` environment
+- [x] Task 13: One-time deploy setup (secrets set by the Android author; project + environment automated): Pages project, repo secrets (the Android author), `production` environment
 - [ ] Task 14: Deploy job on `main`, plus docs (`web/README.md`, and short pointers in the root `README.md` and `AGENTS.md`)
 
 ### Checkpoint C: Done

@@ -133,7 +133,9 @@ The rate-limit store is a Workers KV namespace bound as `RATE_LIMIT_KV` in `prox
 
 ## Status
 
-Working debug build, tested on an emulator and a real phone. Not on the Play Store. Open work (release signing, app icon, Play Integrity, input length cap, crash reporting) is tracked in [tasks/todo.md](tasks/todo.md). Design decisions are in [PRD.md](PRD.md).
+**Web:** an installable PWA copy of the app lives in [`web/`](web/README.md), deployed from `main` to https://hunch8.pages.dev. It calls the same proxy, so answers, moderation and the daily limit are shared.
+
+**Android:** working debug build, tested on an emulator and a real phone. Not on the Play Store. Open work (release signing, app icon, Play Integrity, input length cap, crash reporting) is tracked in [tasks/todo.md](tasks/todo.md). Design decisions are in [PRD.md](PRD.md).
 
 ---
 
