@@ -1,7 +1,7 @@
-import { ask, PLACEHOLDER_PROXY_URL } from "./proxyClient.ts";
+import { ask, proxyUrlFrom } from "./proxyClient.ts";
 import { ballDescription, canAsk, stateForResult, type ScreenState } from "./state.ts";
 
-const PROXY_URL = import.meta.env.VITE_PROXY_URL || PLACEHOLDER_PROXY_URL;
+const PROXY_URL = proxyUrlFrom(import.meta.env.VITE_PROXY_URL);
 
 const questionInput = document.querySelector<HTMLTextAreaElement>("#question")!;
 const ballButton = document.querySelector<HTMLButtonElement>("#ball")!;

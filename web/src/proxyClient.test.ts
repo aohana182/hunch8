@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ask, resultFromResponse } from "./proxyClient.ts";
+import { ask, PLACEHOLDER_PROXY_URL, proxyUrlFrom, resultFromResponse } from "./proxyClient.ts";
 
 const URL = "https://proxy.test/";
 
@@ -82,4 +82,21 @@ test("ask gives up after the timeout and reports a network error", async () => {
       }),
   );
   assert.deepEqual(await ask(URL, "q", { fetchImpl: impl, timeoutMs: 20 }), { kind: "networkError" });
+});
+
+test("the configured proxy URL is used as-is when it's a full https URL", () => {
+  assert.equal(proxyUrlFrom("https://hunch8-proxy.example.workers.dev"), "https://hunch8-proxy.example.workers.dev/");
+  assert.equal(proxyUrlFrom("http://127.0.0.1:8787"), "http://127.0.0.1:8787/");
+});
+
+test("a bare host gets https:// - otherwise fetch would treat it as a path on the page's own site", () => {
+  assert.equal(proxyUrlFrom("hunch8-proxy.example.workers.dev"), "https://hunch8-proxy.example.workers.dev/");
+  assert.equal(proxyUrlFrom("  hunch8-proxy.example.workers.dev/  "), "https://hunch8-proxy.example.workers.dev/");
+});
+
+test("a missing or unusable proxy URL falls back to the placeholder, like the Android build", () => {
+  assert.equal(proxyUrlFrom(undefined), PLACEHOLDER_PROXY_URL);
+  assert.equal(proxyUrlFrom(""), PLACEHOLDER_PROXY_URL);
+  assert.equal(proxyUrlFrom("not a url"), PLACEHOLDER_PROXY_URL);
+  assert.equal(proxyUrlFrom("ftp://example.com"), PLACEHOLDER_PROXY_URL);
 });
