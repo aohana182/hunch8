@@ -102,6 +102,7 @@ The address isn't a secret the way the API key is, because anyone holding a buil
 | Variable | Where | Description |
 |---|---|---|
 | `OPENROUTER_API_KEY` | `proxy/.dev.vars` locally, `wrangler secret put` in production | OpenRouter key used to call Jev. Never goes in the app. |
+| `ALLOWED_ORIGINS` | `[vars]` in `proxy/wrangler.toml` (override locally in `proxy/.dev.vars`) | Comma-separated web origins allowed to call the proxy from a browser (CORS), e.g. the web app's `https://hunch8.pages.dev`. Not needed for the Android app. |
 | `hunch8.proxyUrl` | `android/local.properties` (gitignored) | Address of your deployed proxy, baked into the app at build time. See [Proxy address](#proxy-address). |
 
 The rate-limit store is a Workers KV namespace bound as `RATE_LIMIT_KV` in `proxy/wrangler.toml`.

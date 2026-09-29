@@ -1,3 +1,6 @@
 # Copy to .dev.vars (gitignored) for local `npm run dev`.
 # In production, set it with: npx wrangler secret put OPENROUTER_API_KEY
 OPENROUTER_API_KEY=your-openrouter-api-key
+
+# Optional: overrides [vars] ALLOWED_ORIGINS from wrangler.toml for local `npm run dev`.
+# ALLOWED_ORIGINS=http://localhost:5173
