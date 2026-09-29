@@ -8,8 +8,21 @@
     <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body>
-    <main id="app">
-      <h1 class="title">Hunch8</h1>
+    <main class="screen">
+      <header class="header">
+        <h1 class="title">Hunch8</h1>
+      </header>
+
+      <label class="field">
+        <span class="field-label">Ask a question and provide some context</span>
+        <textarea id="question" rows="3"></textarea>
+      </label>
+
+      <div class="ball-area">
+        <button id="ball" type="button" class="ball" aria-label="Magic ball. Tap to ask.">
+          <span id="ball-text" aria-hidden="true">8</span>
+        </button>
+      </div>
     </main>
     <script type="module" src="/src/main.ts"></script>
   </body>
