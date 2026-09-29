@@ -81,3 +81,12 @@ setUpHelp(
 renderField();
 render();
 ball.start();
+
+// Production only: in dev the worker would cache Vite's live modules.
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {
+      // No offline support (e.g. a private window) - the app works the same online.
+    });
+  });
+}
