@@ -48,6 +48,11 @@ If Playwright's browsers can't be downloaded, run the Chromium projects on an in
 - **`src/proxyClient.ts`** ports `ProxyClient.kt`: 429 means rate limited, 422 means blocked, and anything else is "App not responding".
 - **`public/sw.js`** makes the app open offline after one visit. Asking still needs the network, and says so. It never touches the request to the Worker.
 
+## PWA behavior
+
+- **Updates:** a new service worker installs in the background and waits. `src/pwaUpdate.ts` swaps it in only when no request is in flight and the user isn't typing (or the app is in the background), then reloads; the question survives in `sessionStorage`. The app checks for a new `sw.js` whenever it returns to the foreground and hourly. `public/_headers` keeps `/`, `sw.js` and the manifest at `no-cache` and `/assets/*` immutable.
+- **Shake to ask:** opt-in switch in the help dialog (touch devices only). `src/shake.ts` is the pure detector (3 jolts of ≥14 m/s² change within 900 ms, 1.5 s cooldown); `src/shakeControl.ts` wires it to `devicemotion`. iOS needs the permission prompt from a tap, so after a relaunch it asks again on the first tap. Android also vibrates briefly on an answer. Not verified on a real iPhone yet.
+
 ## Deploys
 
 Deploys run only through GitHub Actions (`.github/workflows/web.yml`):

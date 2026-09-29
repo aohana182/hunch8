@@ -2,6 +2,10 @@
 // ask itself still needs the network, and says so). The build stamps
 // VERSION and PRECACHE (see vite.config.ts), so every deploy gets a fresh
 // cache and the old one is deleted.
+//
+// Update policy: a new worker installs in the background and WAITS. The page
+// decides when to swap (src/pwaUpdate.ts sends SKIP_WAITING at a safe moment,
+// never mid-question), so a running session is never changed under the user.
 const VERSION = "dev";
 const PRECACHE = /* precache */ [];
 const CACHE = `hunch8-${VERSION}`;
@@ -10,9 +14,12 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
       .open(CACHE)
-      .then((cache) => cache.addAll(PRECACHE))
-      .then(() => self.skipWaiting()),
+      .then((cache) => cache.addAll(PRECACHE)),
   );
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data === "SKIP_WAITING") self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
@@ -31,19 +38,11 @@ self.addEventListener("fetch", (event) => {
   // POST) is never touched, so it can't be served stale or cached.
   if (request.method !== "GET" || url.origin !== self.location.origin) return;
 
-  // Pages: network first, so a new deploy shows up on the next online load.
+  // Pages: the precached shell, instantly and offline. A new deploy reaches
+  // the user through a new worker (see the update policy above), not through
+  // a network round trip on every launch.
   if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response.ok) {
-            const copy = response.clone();
-            event.waitUntil(caches.open(CACHE).then((cache) => cache.put("/", copy)));
-          }
-          return response;
-        })
-        .catch(() => caches.match("/", { ignoreVary: true })),
-    );
+    event.respondWith(caches.match("/", { ignoreVary: true }).then((hit) => hit ?? fetch(request)));
     return;
   }
 

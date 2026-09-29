@@ -1,0 +1,12 @@
+# Cloudflare Pages. The files that decide what version the user runs must
+# always be revalidated; only content-hashed files may be cached for good.
+/
+  Cache-Control: no-cache
+/index.html
+  Cache-Control: no-cache
+/sw.js
+  Cache-Control: no-cache
+/manifest.webmanifest
+  Cache-Control: no-cache
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
