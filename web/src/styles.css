@@ -6,6 +6,13 @@
   --hunch8-on-background: #c9d4e0;
   --hunch8-error: #c77b67;
 
+  /* Material 3 baseline dark-scheme roles that Theme.kt leaves at their
+     defaults (outline, onSurfaceVariant, surfaceContainerHigh, ...). */
+  --m3-outline: #938f99;
+  --m3-outline-variant: #49454f;
+  --m3-on-surface-variant: #cac4d0;
+  --m3-surface-container-high: #2b2930;
+
   color-scheme: dark;
   font-family: Roboto, system-ui, sans-serif;
 }
@@ -20,13 +27,6 @@ body {
   color: var(--hunch8-on-background);
 }
 
-.title {
-  margin: 0;
-  text-align: center;
-  font-size: 28px; /* Material 3 headlineMedium */
-  font-weight: 400;
-}
-
 .screen {
   box-sizing: border-box;
   display: flex;
@@ -35,24 +35,241 @@ body {
   min-height: 100dvh;
   max-width: 480px;
   margin: 0 auto;
-  padding: 56px 24px 24px;
+  /* MainScreen.kt pads 56dp from the top, but the Android app is edge-to-edge
+     (targetSdk 35), so that includes the 24dp status bar drawn over it. A web
+     page starts below the status bar, so 32px lands the header in the same place. */
+  padding: calc(32px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom));
 }
 
-.field {
+/* Header: "Hunch8" centered, amber "?" at the end (MainScreen.kt). */
+.header {
+  position: relative;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  justify-content: center;
+  align-items: center;
+}
+
+.title {
+  margin: 0;
+  font-size: 28px; /* headlineMedium */
+  line-height: 36px;
+  font-weight: 400;
+}
+
+.help-button {
+  position: absolute;
+  right: 0;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--hunch8-amber);
+  font: inherit;
+  font-size: 16px; /* titleMedium */
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.help-button:hover,
+.field-clear:hover {
+  background: rgb(201 160 92 / 0.08);
+}
+
+:is(.help-button, .field-clear, .text-button):focus-visible {
+  outline: 2px solid var(--hunch8-amber);
+  outline-offset: 2px;
+}
+
+/* OutlinedTextField: label = titleMedium, text = titleLarge, 3-6 lines. */
+.field {
+  position: relative;
+  display: grid;
 }
 
 .field textarea {
-  font: inherit;
-  font-size: 22px;
-  color: inherit;
+  grid-area: 1 / 1;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: calc(3 * 28px + 32px);
+  max-height: calc(6 * 28px + 32px);
+  padding: 16px 52px 16px 16px;
+  border: 0;
+  outline: none;
   background: transparent;
-  border: 1px solid var(--hunch8-on-background);
-  border-radius: 4px;
-  padding: 16px;
+  color: var(--hunch8-on-background);
+  caret-color: var(--hunch8-amber);
+  font: inherit;
+  font-size: 22px; /* titleLarge */
+  line-height: 28px;
   resize: none;
+  overflow-y: auto;
+}
+
+.field-label,
+.field-outline legend span {
+  font-size: 16px; /* titleMedium, fixed in both positions like the Kotlin label style */
+  font-weight: 500;
+  letter-spacing: 0.15px;
+  line-height: 24px;
+}
+
+.field-label {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 52px;
+  color: var(--m3-on-surface-variant);
+  pointer-events: none;
+  transform-origin: left top;
+  transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1), color 150ms;
+}
+
+.field-outline {
+  position: absolute;
+  inset: -12px 0 0;
+  margin: 0;
+  padding: 0 12px;
+  border: 1px solid var(--m3-outline);
+  border-radius: 4px;
+  min-width: 0; /* a fieldset defaults to min-content and would widen the page */
+  pointer-events: none;
+}
+
+/* The legend reserves the notch; it is only as wide as the label when floating. */
+.field-outline legend {
+  max-width: 0.01px;
+  height: 24px;
+  padding: 0;
+  overflow: hidden;
+  visibility: hidden;
+  white-space: nowrap;
+}
+
+.field-outline legend span {
+  padding: 0 4px;
+}
+
+.field:is(:focus-within, .is-filled) .field-label {
+  transform: translateY(-28px); /* centered on the top border line */
+  right: 16px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis; /* only on phones narrower than the label */
+}
+
+.field:is(:focus-within, .is-filled) .field-outline legend {
+  max-width: 100%;
+}
+
+.field:focus-within .field-outline {
+  border: 2px solid var(--hunch8-amber);
+  padding: 0 11px;
+}
+
+.field:focus-within .field-label {
+  color: var(--hunch8-amber);
+}
+
+.field-clear {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  width: 48px;
+  height: 48px;
+  margin-top: -24px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--hunch8-amber);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.field-clear[hidden] {
+  display: none;
+}
+
+/* AlertDialog (Material 3 defaults, as HelpDialog doesn't override them). */
+.dialog {
+  box-sizing: border-box;
+  width: min(560px, calc(100vw - 48px));
+  max-height: calc(100dvh - 48px);
+  padding: 24px;
+  border: 0;
+  border-radius: 28px;
+  background: var(--m3-surface-container-high);
+  color: var(--m3-on-surface-variant);
+}
+
+.dialog::backdrop {
+  background: rgb(0 0 0 / 0.32);
+}
+
+.dialog-title {
+  margin: 0 0 16px;
+  color: var(--hunch8-on-background);
+  font-size: 24px; /* headlineSmall */
+  line-height: 32px;
+  font-weight: 400;
+}
+
+.dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 14px; /* bodyMedium */
+  line-height: 20px;
+  letter-spacing: 0.25px;
+}
+
+.dialog-body p {
+  margin: 0;
+}
+
+.dialog-divider {
+  width: 100%;
+  margin: 4px 0;
+  border: 0;
+  border-top: 1px solid var(--m3-outline-variant);
+}
+
+.dialog-subtitle {
+  color: var(--hunch8-amber);
+  font-weight: 500; /* titleSmall */
+  letter-spacing: 0.1px;
+}
+
+.dialog-legal a {
+  color: var(--hunch8-amber);
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.text-button {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 20px;
+  background: transparent;
+  color: var(--hunch8-amber);
+  font: inherit;
+  font-size: 14px; /* labelLarge */
+  font-weight: 500;
+  letter-spacing: 0.1px;
+  cursor: pointer;
+}
+
+.text-button:hover {
+  background: rgb(201 160 92 / 0.08);
 }
 
 .ball-area {

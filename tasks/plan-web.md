@@ -58,7 +58,7 @@ After that: screen parity, the PWA features (installable, works offline), and fi
 - [ ] Review, then merge
 
 ### PR 3: Parity, PWA and deploy
-- [ ] Task 10: Screen parity: header, help dialog (with Privacy and Disclaimer links), text field, draft kept in `sessionStorage`, responsive layout
+- [x] Task 10: Screen parity: header, help dialog (with Privacy and Disclaimer links), text field, draft kept in `sessionStorage`, responsive layout
 - [ ] Task 11: Icons from the screenshot, manifest, iOS meta tags
 - [ ] Task 12: Service worker: the app opens offline and shows "App not responding" when asked
 - [ ] Task 13: One-time deploy setup: Pages project, repo secrets (the Android author), `production` environment
