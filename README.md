@@ -13,7 +13,9 @@
 
 **Ask a yes/no question, tap the ball, and get one of the 20 classic magic 8-ball answers — chosen by a real decision model reading your question, not by a coin flip.**
 
-Hunch8 is an Android app built on [Jev](https://openrouter.ai/docs/guides/community/jev), TypeSafe's decision model on OpenRouter. Jev doesn't write text like a chatbot: it rates how strongly the answer to your question is *yes* and returns a number. Hunch8 turns that number into the matching 8-ball phrase.
+Hunch8 is an Android app and an installable web app built on [Jev](https://openrouter.ai/docs/guides/community/jev), TypeSafe's decision model on OpenRouter. Jev doesn't write text like a chatbot: it rates how strongly the answer to your question is *yes* and returns a number. Hunch8 turns that number into the matching 8-ball phrase.
+
+**Try it in your browser: <https://hunch8.pages.dev>.** On a phone, add it to your home screen and it opens like an app.
 
 <table>
 <tr><td><b>Reads your context</b></td><td>"Should I stay home or go to the concert? I have a fever of 39." gets "You may rely on it" — stay home.</td></tr>
@@ -32,14 +34,16 @@ Hunch8 is an Android app built on [Jev](https://openrouter.ai/docs/guides/commun
 ```mermaid
 flowchart LR
     A[Android app] -->|question text| B[Cloudflare Worker proxy]
+    W[Web app, hunch8.pages.dev] -->|question text| B
     B -->|one request, two questions| C[OpenRouter Decisions API]
     C --> D[Jev]
     D -->|score 0-4 + moderation flag| B
     B -->|one of 20 phrases| A
+    B -->|one of 20 phrases| W
 ```
 
 1. You type one question with any context and tap the ball.
-2. The app sends the text to a small proxy on Cloudflare Workers. The OpenRouter API key lives only there, never in the app.
+2. The app, Android or web, sends the text to a small proxy on Cloudflare Workers. The OpenRouter API key lives only there, never in either app. Both apps share the proxy, so they give the same kind of answers under the same rules.
 3. The proxy asks Jev two things in one call: a **score** (0 = definitely no, 4 = definitely yes) and a **moderation check** (is this hateful?).
 4. Flagged → the app shows a red ✕. Otherwise the score picks a band of phrases, one is chosen at random, and confidence below 0.6 always falls back to a non-committal phrase.
 5. Each IP address gets 50 questions a day.
@@ -83,6 +87,17 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 Requires JDK 17+ and the Android SDK (compileSdk 35, minSdk 26).
 
+**3. Web app**
+
+```sh
+cd web
+npm install
+echo "VITE_PROXY_URL=https://your-worker.your-subdomain.workers.dev" > .env.local
+npm run dev                             # http://localhost:5173
+```
+
+Requires Node 24+. Browsers only accept the proxy's answers on origins listed in `ALLOWED_ORIGINS` in `proxy/wrangler.toml`. `http://localhost:5173` is already listed. If you host your own copy, add its address and redeploy the proxy. More in [web/README.md](web/README.md).
+
 ### Proxy address
 
 The app sends every question to one address: your proxy. That address is **not** stored in the code. It lives in `android/local.properties`, which git ignores:
@@ -104,6 +119,8 @@ The address isn't a secret the way the API key is, because anyone holding a buil
 | `OPENROUTER_API_KEY` | `proxy/.dev.vars` locally, `wrangler secret put` in production | OpenRouter key used to call Jev. Never goes in the app. |
 | `ALLOWED_ORIGINS` | `[vars]` in `proxy/wrangler.toml` (override locally in `proxy/.dev.vars`) | Comma-separated web origins allowed to call the proxy from a browser (CORS), e.g. the web app's `https://hunch8.pages.dev`. Not needed for the Android app. |
 | `hunch8.proxyUrl` | `android/local.properties` (gitignored) | Address of your deployed proxy, baked into the app at build time. See [Proxy address](#proxy-address). |
+| `VITE_PROXY_URL` | `web/.env.local` (gitignored); in CI, the repo variable `VITEURL` | Address of your proxy for the web build. The web counterpart of `hunch8.proxyUrl`. A bare host without `https://` works too. |
+| `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | GitHub repo secrets | Let GitHub Actions deploy the web app to Cloudflare Pages. The token needs *Cloudflare Pages: Edit*. |
 
 The rate-limit store is a Workers KV namespace bound as `RATE_LIMIT_KV` in `proxy/wrangler.toml`.
 
@@ -113,6 +130,9 @@ The rate-limit store is a Workers KV namespace bound as `RATE_LIMIT_KV` in `prox
 
 - **Kotlin + Jetpack Compose** — the Android app, including the fake-3D ball drawn on a Canvas
 - **OkHttp** — the app's single HTTPS call to the proxy
+- **TypeScript + Vite** — the web app, with no UI framework. The ball is a Canvas 2D port of the Compose drawing code, and a service worker lets it open offline.
+- **Cloudflare Pages + GitHub Actions** — hosting for the web app, deployed on every merge to `main`
+- **Playwright** — web end-to-end tests on Pixel 7, iPhone and desktop sizes, against a fake proxy
 - **Cloudflare Workers (TypeScript)** — the proxy that holds the API key and enforces the rate limit
 - **Workers KV** — per-IP daily request counters
 - **OpenRouter Decisions API + Jev** (`typesafe/jev-1.13`) — the decision model
@@ -128,12 +148,22 @@ The rate-limit store is a Workers KV namespace bound as `RATE_LIMIT_KV` in `prox
 | `npm run dev` | `proxy/` | Run the proxy locally |
 | `npm run deploy` | `proxy/` | Deploy the proxy to Cloudflare |
 | `./gradlew assembleDebug` | `android/` | Build the debug APK |
+| `npm run dev` | `web/` | Run the web app locally |
+| `npm test` | `web/` | Unit tests: proxy client, screen state, animation maths, ball drawing helpers |
+| `npm run typecheck` | `web/` | Type-check the web app |
+| `npm run e2e` | `web/` | Playwright end-to-end tests against a fake proxy (no quota used) |
+| `npm run build` | `web/` | Production build to `web/dist` |
+
+### Deploys
+
+- **Web:** automatic. `.github/workflows/web.yml` runs the web tests on every pull request that touches `web/`, and never deploys from a PR. A merge to `main` runs the same tests, then deploys to Cloudflare Pages.
+- **Proxy:** manual, with `npm run deploy` in `proxy/`.
 
 ---
 
 ## Status
 
-**Web:** an installable PWA copy of the app lives in [`web/`](web/README.md), deployed from `main` to https://hunch8.pages.dev. It calls the same proxy, so answers, moderation and the daily limit are shared.
+**Web:** live at https://hunch8.pages.dev. It's an installable PWA copy of the Android app, in [`web/`](web/README.md), deployed automatically from `main`. It calls the same proxy, so answers, moderation and the daily limit are shared. Tested in Chromium and WebKit through Playwright, and end to end against the live proxy. Home-screen install on real Android phones and iPhones hasn't been checked yet.
 
 **Android:** working debug build, tested on an emulator and a real phone. Not on the Play Store. Open work (release signing, app icon, Play Integrity, input length cap, crash reporting) is tracked in [tasks/todo.md](tasks/todo.md). Design decisions are in [PRD.md](PRD.md).
 
@@ -141,7 +171,7 @@ The rate-limit store is a Workers KV namespace bound as `RATE_LIMIT_KV` in `prox
 
 ## Privacy
 
-The app has no accounts, analytics, ads or tracking. The only thing that leaves your phone is the question you tap to ask. Full details in [PRIVACY.md](PRIVACY.md).
+Neither app has accounts, analytics, ads or tracking. The only thing that leaves your device is the question you tap to ask. The web app keeps your draft question in the browser tab (`sessionStorage`) so it survives a reload. It's gone when you close the tab. Full details in [PRIVACY.md](PRIVACY.md).
 
 ## Disclaimer
 
@@ -153,9 +183,8 @@ Entertainment only, provided as-is, with no warranty and no liability. Not affil
 
 ```sh
 git clone https://github.com/aohana182/hunch8
-cd hunch8/proxy
-npm install
-npm test
+cd hunch8/proxy && npm install && npm test
+cd ../web && npm install && npm test && npm run e2e
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for branching, commit format and PR process.
