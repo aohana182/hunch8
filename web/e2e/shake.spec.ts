@@ -23,7 +23,7 @@ async function shakePhone(page: Page) {
 
 async function enableShake(page: Page) {
   await page.getByRole("button", { name: "How to use Hunch8" }).click();
-  await page.getByRole("checkbox", { name: "Shake your phone to ask" }).check();
+  await page.getByRole("checkbox", { name: "Use phone motion: shake to ask, ball follows your tilt" }).check();
   await page.getByRole("button", { name: "Got it" }).click();
 }
 
@@ -53,7 +53,7 @@ test("the choice is remembered, and shaking with an empty question asks nothing"
   await enableShake(page);
   await page.reload();
   await page.getByRole("button", { name: "How to use Hunch8" }).click();
-  await expect(page.getByRole("checkbox", { name: "Shake your phone to ask" })).toBeChecked();
+  await expect(page.getByRole("checkbox", { name: "Use phone motion: shake to ask, ball follows your tilt" })).toBeChecked();
   await page.getByRole("button", { name: "Got it" }).click();
 
   await shakePhone(page);

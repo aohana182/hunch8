@@ -3,6 +3,7 @@
 // Drawing lives in draw.ts; this decides what to draw each frame.
 import type { BallState } from "../state.ts";
 import { Animated, fastOutSlowIn, linear, repeatReverse, type AnimationSpec } from "./animation.ts";
+import { NO_INERTIA, type BallInertia, type Inertia } from "./inertia.ts";
 import { BALL_SIZE, drawBall, drawShadow, type BallFrame, type TriangleStyle } from "./draw.ts";
 
 const FLIP: AnimationSpec = { type: "tween", durationMs: 750, easing: fastOutSlowIn };
@@ -29,6 +30,8 @@ export class Ball {
   private readonly ballCanvas: HTMLCanvasElement;
   private readonly shadowCanvas: HTMLCanvasElement;
   private readonly reducedMotion: () => boolean;
+  private inertiaSource: BallInertia | undefined;
+  private inertia: Inertia = NO_INERTIA;
 
   constructor(
     button: HTMLElement,
@@ -40,6 +43,11 @@ export class Ball {
     this.ballCanvas = ballCanvas;
     this.shadowCanvas = shadowCanvas;
     this.reducedMotion = reducedMotion;
+  }
+
+  // The phone-motion layer; the caller feeds it sensor samples.
+  setInertia(source: BallInertia | undefined) {
+    this.inertiaSource = source;
   }
 
   start() {
@@ -96,6 +104,7 @@ export class Ball {
 
     const elapsed = now - this.startMs;
     const still = this.reducedMotion();
+    this.inertia = still || !this.inertiaSource ? NO_INERTIA : this.inertiaSource.step(now);
     const bob = still ? 0 : -4 + 8 * repeatReverse(elapsed, BOB_MS, fastOutSlowIn);
     const shake = still ? 0 : -1 + 2 * repeatReverse(elapsed, SHAKE_MS, linear);
     const thinking = this.state === "THINKING";
@@ -144,6 +153,7 @@ export class Ball {
       triangleText,
       triangleStyle,
       blockedAlpha: this.blockedAlpha.value,
+      inertia: this.inertia,
     };
   }
 

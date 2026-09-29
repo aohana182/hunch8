@@ -51,7 +51,10 @@ If Playwright's browsers can't be downloaded, run the Chromium projects on an in
 ## PWA behavior
 
 - **Updates:** a new service worker installs in the background and waits. `src/pwaUpdate.ts` swaps it in only when no request is in flight and the user isn't typing (or the app is in the background), then reloads; the question survives in `sessionStorage`. The app checks for a new `sw.js` whenever it returns to the foreground and hourly. `public/_headers` keeps `/`, `sw.js` and the manifest at `no-cache` and `/assets/*` immutable.
-- **Shake to ask:** opt-in switch in the help dialog (touch devices only). `src/shake.ts` is the pure detector (3 jolts of ≥14 m/s² change within 900 ms, 1.5 s cooldown); `src/shakeControl.ts` wires it to `devicemotion`. iOS needs the permission prompt from a tap, so after a relaunch it asks again on the first tap. Android also vibrates briefly on an answer. Not verified on a real iPhone yet.
+- **Phone motion (opt-in):** one switch in the help dialog (touch devices only) turns on the motion sensor for two things. `src/motionControl.ts` reads `devicemotion`, converts it to the screen's frame (the page can be held sideways) and hands the samples on.
+  - **Shake to ask:** `src/shake.ts` is the pure detector (3 jolts of ≥14 m/s² change within 900 ms, 1.5 s cooldown). It runs the same action as tapping the ball. Android also vibrates briefly on an answer.
+  - **Ball follows the phone:** `src/ball/inertia.ts` is a mass on springs that moves only the decals (the "8", the window, the floating answer) over the fixed sphere, so the disc never turns into an ellipse. Tilting rolls the face downhill relative to how the phone is usually held; a jump or shove makes it lag and overshoot; turning the phone counter-rotates it so the answer stays level. `prefers-reduced-motion` turns it off.
+  - **Not verified on real phones:** iOS needs the permission prompt from a tap (it asks again on the first tap after a relaunch), and iOS may report the axes with the opposite sign — `INVERTED_AXES` in `motionControl.ts` is the switch if the ball moves the wrong way there. Landscape mapping is derived, not measured.
 
 ## Deploys
 

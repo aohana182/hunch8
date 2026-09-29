@@ -1,9 +1,11 @@
 import { Ball } from "./ball/ball.ts";
+import { BallInertia } from "./ball/inertia.ts";
 import { setUpHelp } from "./help.ts";
 import { ask, proxyUrlFrom } from "./proxyClient.ts";
 import { setUpUpdates } from "./pwaUpdate.ts";
 import { loadScreen, saveScreen } from "./session.ts";
-import { setUpShake, shakeSupported } from "./shakeControl.ts";
+import { createShakeDetector } from "./shake.ts";
+import { motionSupported, setUpMotion } from "./motionControl.ts";
 import { ballDescription, canAsk, stateForResult, type ScreenState } from "./state.ts";
 
 const PROXY_URL = proxyUrlFrom(import.meta.env.VITE_PROXY_URL);
@@ -81,19 +83,24 @@ ballButton.addEventListener("click", askQuestion);
 
 const help = document.querySelector<HTMLDialogElement>("#help")!;
 
-// Shake is another trigger for the same action as tapping the ball. It stays
-// quiet while a dialog is open or the app is in the background.
-const shake = setUpShake(() => {
-  if (!help.open && !document.hidden) void askQuestion();
+// One opt-in for both uses of the motion sensor. Shake is another trigger for
+// the same action as tapping the ball (quiet while a dialog is open or the app
+// is in the background); the same samples also move the ball's face.
+const detectShake = createShakeDetector();
+const inertia = new BallInertia();
+ball.setInertia(inertia);
+const motion = setUpMotion((sample, timeMs) => {
+  inertia.feed(sample, timeMs);
+  if (detectShake(sample, timeMs) && !help.open && !document.hidden) void askQuestion();
 });
-const shakeRow = document.querySelector<HTMLElement>("#shake-row")!;
-const shakeToggle = document.querySelector<HTMLInputElement>("#shake-toggle")!;
-if (shakeSupported()) {
-  shakeRow.hidden = false;
-  shakeToggle.checked = shake.enabled();
+const motionRow = document.querySelector<HTMLElement>("#motion-row")!;
+const motionToggle = document.querySelector<HTMLInputElement>("#motion-toggle")!;
+if (motionSupported()) {
+  motionRow.hidden = false;
+  motionToggle.checked = motion.enabled();
   // Runs from the tap on the switch, which is what iOS demands for its permission prompt.
-  shakeToggle.addEventListener("change", async () => {
-    shakeToggle.checked = await shake.set(shakeToggle.checked);
+  motionToggle.addEventListener("change", async () => {
+    motionToggle.checked = await motion.set(motionToggle.checked);
   });
 }
 
