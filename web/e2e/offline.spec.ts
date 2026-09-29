@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { readFileSync } from "node:fs";
 
 test.use({ serviceWorkers: "allow", reducedMotion: "reduce" });
 
@@ -50,4 +51,28 @@ test("the manifest makes the app installable: name, standalone display, 192 and 
   for (const icon of manifest.icons) {
     expect((await request.get(icon.src)).ok(), icon.src).toBe(true);
   }
+});
+
+test("a new worker waits instead of taking over, and applies only when told to", async ({ request }) => {
+  const sw = await (await request.get("/sw.js")).text();
+  expect(sw).toContain(`"SKIP_WAITING"`);
+  // skipWaiting may only be reached from the message handler, never at install.
+  expect(sw.match(/skipWaiting\(\)/g)).toHaveLength(1);
+  expect(sw).toMatch(/message[\s\S]*SKIP_WAITING[\s\S]*skipWaiting\(\)/);
+});
+
+test("the files that pick the version are never cached; hashed assets are cached for good", async () => {
+  // Cloudflare's _headers: an unindented path line, then indented "Name: value" lines.
+  const rules = new Map<string, string>();
+  let path = "";
+  const file = readFileSync(new URL("../public/_headers", import.meta.url), "utf8");
+  for (const line of file.split(/\r?\n/)) {
+    if (line.startsWith("#") || line.trim() === "") continue;
+    if (!line.startsWith(" ")) path = line.trim();
+    else rules.set(path, line.trim());
+  }
+  for (const p of ["/", "/index.html", "/sw.js", "/manifest.webmanifest"]) {
+    expect(rules.get(p), p).toBe("Cache-Control: no-cache");
+  }
+  expect(rules.get("/assets/*")).toBe("Cache-Control: public, max-age=31536000, immutable");
 });

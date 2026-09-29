@@ -317,3 +317,21 @@ body {
   height: 36px;
   pointer-events: none;
 }
+
+.shake-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 40px;
+  color: var(--hunch8-on-background);
+}
+
+.shake-row[hidden] {
+  display: none;
+}
+
+.shake-row input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--hunch8-amber);
+}

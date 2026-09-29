@@ -4,6 +4,8 @@
 // uses inside DrawScope (the window lip, the triangle stroke) are converted at
 // the density of the device the reference screenshots came from.
 
+import type { Inertia } from "./inertia.ts";
+
 export const BALL_SIZE = 300;
 export const WINDOW_RADIUS = 0.6; // fraction of the ball's radius
 export const EIGHT_RADIUS = 0.36;
@@ -34,6 +36,8 @@ export interface BallFrame {
   triangleText: string;
   triangleStyle: TriangleStyle;
   blockedAlpha: number;
+  // The phone's tilt, jerk and spin, moving the decals over the fixed sphere. Absent = at rest.
+  inertia?: Inertia;
 }
 
 function withAlpha(hex: string, alpha: number): string {
@@ -72,13 +76,36 @@ export function drawBall(ctx: CanvasRenderingContext2D, size: number, frame: Bal
   ctx.clip();
 
   drawSphereBody(ctx, size);
-  drawEightDecal(ctx, size, frame.flip);
-  drawWindowDecal(ctx, size, frame.flip);
+  // The decals ride the inertia layer; the body, its shading and the gloss are
+  // lit from the screen and stay put, so the ball never turns into an ellipse.
+  withInertia(ctx, size, frame.inertia, () => {
+    drawEightDecal(ctx, size, frame.flip);
+    drawWindowDecal(ctx, size, frame.flip);
+  });
   drawSphereShading(ctx, size);
-  if (frame.flip >= 180) drawFloatingAnswer(ctx, size, frame.triangleText, frame.triangleStyle, frame.reveal);
+  if (frame.flip >= 180) {
+    withInertia(ctx, size, frame.inertia, () =>
+      drawFloatingAnswer(ctx, size, frame.triangleText, frame.triangleStyle, frame.reveal),
+    );
+  }
   drawGloss(ctx, size);
   if (frame.blockedAlpha > 0.01) drawBlockedMark(ctx, size, frame.blockedAlpha);
 
+  ctx.restore();
+}
+
+// Slides the decals by the layer's offset and turns them about the ball's center.
+function withInertia(ctx: CanvasRenderingContext2D, size: number, inertia: Inertia | undefined, block: () => void) {
+  if (!inertia || (inertia.x === 0 && inertia.y === 0 && inertia.rollDeg === 0)) {
+    block();
+    return;
+  }
+  const r = size / 2;
+  ctx.save();
+  ctx.translate(r + inertia.x * r, r + inertia.y * r);
+  ctx.rotate((inertia.rollDeg * Math.PI) / 180);
+  ctx.translate(-r, -r);
+  block();
   ctx.restore();
 }
 

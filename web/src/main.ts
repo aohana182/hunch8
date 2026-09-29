@@ -1,7 +1,11 @@
 import { Ball } from "./ball/ball.ts";
+import { BallInertia } from "./ball/inertia.ts";
 import { setUpHelp } from "./help.ts";
 import { ask, proxyUrlFrom } from "./proxyClient.ts";
+import { setUpUpdates } from "./pwaUpdate.ts";
 import { loadScreen, saveScreen } from "./session.ts";
+import { createShakeDetector } from "./shake.ts";
+import { motionSupported, setUpMotion } from "./motionControl.ts";
 import { ballDescription, canAsk, stateForResult, type ScreenState } from "./state.ts";
 
 const PROXY_URL = proxyUrlFrom(import.meta.env.VITE_PROXY_URL);
@@ -60,7 +64,7 @@ clearButton.addEventListener("click", () => {
   questionInput.focus();
 });
 
-ballButton.addEventListener("click", async () => {
+async function askQuestion() {
   const question = questionInput.value;
   if (!canAsk(question, screen.ballState)) return;
 
@@ -71,22 +75,48 @@ ballButton.addEventListener("click", async () => {
   const result = await ask(PROXY_URL, question);
   screen = stateForResult(result, screen.answerText);
   render();
-});
+  if (screen.ballState === "ANSWERED" && !reducedMotion.matches) navigator.vibrate?.(40); // Android only
+  applyUpdateIfSafe();
+}
 
-setUpHelp(
-  document.querySelector<HTMLButtonElement>("#help-button")!,
-  document.querySelector<HTMLDialogElement>("#help")!,
-);
+ballButton.addEventListener("click", askQuestion);
+
+const help = document.querySelector<HTMLDialogElement>("#help")!;
+
+// One opt-in for both uses of the motion sensor. Shake is another trigger for
+// the same action as tapping the ball (quiet while a dialog is open or the app
+// is in the background); the same samples also move the ball's face.
+const detectShake = createShakeDetector();
+const inertia = new BallInertia();
+ball.setInertia(inertia);
+const motion = setUpMotion((sample, timeMs) => {
+  inertia.feed(sample, timeMs);
+  if (detectShake(sample, timeMs) && !help.open && !document.hidden) void askQuestion();
+});
+const motionRow = document.querySelector<HTMLElement>("#motion-row")!;
+const motionToggle = document.querySelector<HTMLInputElement>("#motion-toggle")!;
+if (motionSupported()) {
+  motionRow.hidden = false;
+  motionToggle.checked = motion.enabled();
+  // Runs from the tap on the switch, which is what iOS demands for its permission prompt.
+  motionToggle.addEventListener("change", async () => {
+    motionToggle.checked = await motion.set(motionToggle.checked);
+  });
+}
+
+setUpHelp(document.querySelector<HTMLButtonElement>("#help-button")!, help);
 
 renderField();
 render();
 ball.start();
 
 // Production only: in dev the worker would cache Vite's live modules.
-if (import.meta.env.PROD && "serviceWorker" in navigator) {
+let applyUpdateIfSafe = () => {};
+if (import.meta.env.PROD) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js").catch(() => {
-      // No offline support (e.g. a private window) - the app works the same online.
-    });
+    applyUpdateIfSafe = setUpUpdates(() => ({
+      busy: screen.ballState === "THINKING",
+      typing: document.activeElement === questionInput,
+    }));
   });
 }
