@@ -1,8 +1,10 @@
 import { test, expect, type Page } from "@playwright/test";
+import { answerMotionPermission } from "./motionPermission.ts";
 
 // The ball's face follows the phone only on touch devices with motion switched on.
-test.beforeEach(({}, testInfo) => {
+test.beforeEach(async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "pixel-7", "motion is offered on touch devices - covered on the Pixel 7 profile");
+  await answerMotionPermission(page, "granted");
 });
 
 const faceImage = (page: Page) => page.locator("#ball-canvas").evaluate((c) => (c as HTMLCanvasElement).toDataURL());

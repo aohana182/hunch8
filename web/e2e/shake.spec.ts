@@ -1,11 +1,13 @@
 import { test, expect, type Page } from "@playwright/test";
 import { mockProxy } from "./mockProxy.ts";
+import { answerMotionPermission } from "./motionPermission.ts";
 
 test.use({ reducedMotion: "reduce" });
 
 // Only phones expose the switch; desktop projects have no coarse pointer.
-test.beforeEach(({}, testInfo) => {
+test.beforeEach(async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "pixel-7", "shake is offered on touch devices - covered on the Pixel 7 profile");
+  await answerMotionPermission(page, "granted");
 });
 
 const ball = (page: Page) => page.getByRole("button", { name: /ball|responding|limit|won't answer/i });
@@ -54,6 +56,21 @@ test("the choice is remembered, and shaking with an empty question asks nothing"
   await page.reload();
   await page.getByRole("button", { name: "How to use Hunch8" }).click();
   await expect(page.getByRole("checkbox", { name: "Use phone motion: shake to ask, ball follows your tilt" })).toBeChecked();
+  await page.getByRole("button", { name: "Got it" }).click();
+
+  await shakePhone(page);
+  expect(proxy.questions).toHaveLength(0);
+});
+
+test("if the browser refuses the motion permission, the switch turns itself back off and shaking does nothing", async ({ page }) => {
+  await answerMotionPermission(page, "denied"); // runs after the beforeEach's, so it wins
+  const proxy = await mockProxy(page, () => ({ status: 200, body: { answer: "Yes", confidence: 0.9, cost: 0 } }));
+  await page.goto("/");
+  await page.getByRole("textbox", { name: "Ask a question and provide some context" }).fill("Should I go?");
+  await page.getByRole("button", { name: "How to use Hunch8" }).click();
+  const toggle = page.getByRole("checkbox", { name: /Use phone motion/ });
+  await toggle.click();
+  await expect(toggle).not.toBeChecked();
   await page.getByRole("button", { name: "Got it" }).click();
 
   await shakePhone(page);
