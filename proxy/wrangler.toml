@@ -5,3 +5,8 @@ compatibility_date = "2024-09-25"
 [[kv_namespaces]]
 binding = "RATE_LIMIT_KV"
 id = "eecbb8d9fbc84de4b4a30dd3614764a8"
+
+# Origins whose pages may read proxy responses (CORS). Exact scheme+host, comma-separated.
+# The Android app sends no Origin and doesn't need an entry.
+[vars]
+ALLOWED_ORIGINS = "https://hunch8.pages.dev,http://localhost:5173"
