@@ -1,0 +1,75 @@
+/* Palette from android/.../ui/Theme.kt - same names, so the two stay comparable. */
+:root {
+  --hunch8-background: #0b1826;
+  --hunch8-surface: #122333;
+  --hunch8-amber: #c9a05c;
+  --hunch8-on-background: #c9d4e0;
+  --hunch8-error: #c77b67;
+
+  color-scheme: dark;
+  font-family: Roboto, system-ui, sans-serif;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--hunch8-background);
+  color: var(--hunch8-on-background);
+}
+
+.title {
+  margin: 0;
+  text-align: center;
+  font-size: 28px; /* Material 3 headlineMedium */
+  font-weight: 400;
+}
+
+.screen {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 100dvh;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 56px 24px 24px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field textarea {
+  font: inherit;
+  font-size: 22px;
+  color: inherit;
+  background: transparent;
+  border: 1px solid var(--hunch8-on-background);
+  border-radius: 4px;
+  padding: 16px;
+  resize: none;
+}
+
+.ball-area {
+  flex: 1;
+  display: grid;
+  place-items: center;
+}
+
+/* Placeholder ball - replaced by the canvas port. */
+.ball {
+  width: 300px;
+  height: 300px;
+  border: none;
+  border-radius: 50%;
+  background: #111;
+  color: var(--hunch8-on-background);
+  font: inherit;
+  font-size: 20px;
+  font-weight: 700;
+  white-space: pre-line;
+  cursor: pointer;
+}

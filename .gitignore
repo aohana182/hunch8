@@ -34,3 +34,10 @@ Thumbs.db
 !.vscode/extensions.json
 *.suo
 *.sw?
+
+# Web (PWA)
+web/node_modules/
+web/dist/
+web/dist-e2e/
+web/test-results/
+web/playwright-report/
