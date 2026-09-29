@@ -5,6 +5,22 @@
 // configured - every ask then fails as "App not responding".
 export const PLACEHOLDER_PROXY_URL = "https://YOUR-WORKER.YOUR-SUBDOMAIN.workers.dev";
 
+// The URL comes from build config, where a bare host ("x.workers.dev") is an
+// easy slip - and fetch would silently treat it as a path on the page's own
+// site. So a bare host gets https://, and anything unusable falls back to the
+// placeholder (every ask then shows "App not responding", as on Android).
+export function proxyUrlFrom(configured: string | undefined): string {
+  const raw = (configured ?? "").trim();
+  if (!raw) return PLACEHOLDER_PROXY_URL;
+  const withScheme = /^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : `https://${raw}`;
+  try {
+    const url = new URL(withScheme);
+    return url.protocol === "https:" || url.protocol === "http:" ? url.href : PLACEHOLDER_PROXY_URL;
+  } catch {
+    return PLACEHOLDER_PROXY_URL;
+  }
+}
+
 // Jev takes a few seconds; past this the user is better served by the error
 // state than by a ball that shakes forever.
 const DEFAULT_TIMEOUT_MS = 15_000;

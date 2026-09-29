@@ -71,7 +71,7 @@ One workflow, `.github/workflows/web.yml`. It runs only when `web/**` or the wor
 | Trigger | Jobs | Deploys? |
 |---|---|---|
 | `pull_request` → `main` | `test`: `npm ci`, unit tests, typecheck, build, and Playwright E2E on mocks (Chromium, plus WebKit for iPhone). The Playwright HTML report, with screenshots of each ball state, is uploaded as a workflow artifact so reviewers can see the UI without running anything. | **No.** PRs never touch Cloudflare or the real Worker. |
-| `push` → `main` (a merged PR) | `test` (same as above), then `deploy`, which needs `test` to pass: build with `VITE_PROXY_URL`, then `wrangler pages deploy dist --project-name hunch8 --branch main` via `cloudflare/wrangler-action`. | **Yes**, to production `https://hunch8.pages.dev`. |
+| `push` → `main` (a merged PR) | `test` (same as above), then `deploy`, which needs `test` to pass: build with `VITE_PROXY_URL` set from the repo variable `VITEURL`, then `wrangler pages deploy dist --project-name hunch8 --branch main` via `cloudflare/wrangler-action`. | **Yes**, to production `https://hunch8.pages.dev`. |
 
 One-time setup:
 - **Cloudflare Pages project:** created once with `wrangler pages project create hunch8 --production-branch main`, by any member of the account.
@@ -79,14 +79,14 @@ One-time setup:
 - **GitHub repo settings** (only the repo owner can add these on a personal-account repo):
   - Secret `CLOUDFLARE_API_TOKEN`
   - Secret `CLOUDFLARE_ACCOUNT_ID`
-  - Variable `VITE_PROXY_URL`, so it stays out of tracked files like `local.properties` does
+  - Variable `VITEURL` (the Worker URL; the deploy job passes it to the build as `VITE_PROXY_URL`), so it stays out of tracked files like `local.properties` does
 - **Production environment:** the `deploy` job runs in a GitHub `production` environment, so deploy history is visible and can be gated later.
 
 ## Configuration
 
 | Variable | Where | Description |
 |---|---|---|
-| `VITE_PROXY_URL` | `web/.env.local` (gitignored by the root `.env*` rule) | The Worker URL, baked in at build time. This mirrors `hunch8.proxyUrl` in `android/local.properties`. If it's missing, the build falls back to the same placeholder `https://YOUR-WORKER.YOUR-SUBDOMAIN.workers.dev`, and every ask shows "App not responding". |
+| `VITE_PROXY_URL` | `web/.env.local` (gitignored by the root `.env*` rule) | The Worker URL, baked in at build time. In CI it comes from the repo variable `VITEURL`. A bare host (no `https://`) gets `https://` added. This mirrors `hunch8.proxyUrl` in `android/local.properties`. If it's missing, the build falls back to the same placeholder `https://YOUR-WORKER.YOUR-SUBDOMAIN.workers.dev`, and every ask shows "App not responding". |
 
 The Worker must list the web app's origin in `ALLOWED_ORIGINS`. That's the CORS change, delivered separately.
 
