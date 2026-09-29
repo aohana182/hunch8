@@ -1,0 +1,51 @@
+name: web
+
+# PRs: test on mocks only - never touches Cloudflare or the real Worker.
+# main (a merged PR): same tests; the deploy job is added with the PWA work.
+on:
+  pull_request:
+    branches: [main]
+    paths: ["web/**", ".github/workflows/web.yml"]
+  push:
+    branches: [main]
+    paths: ["web/**", ".github/workflows/web.yml"]
+
+concurrency:
+  group: web-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24 # node --test runs the .ts unit tests natively
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run typecheck
+      - run: npm run build
+      - name: No OpenRouter key or direct OpenRouter calls in the bundle
+        run: |
+          if grep -rlE "sk-or-|openrouter\.ai" dist; then
+            echo "::error::web/dist references an OpenRouter key or host - the key belongs only in the Worker"
+            exit 1
+          fi
+      - run: npx playwright install --with-deps chromium webkit
+      - run: npm run e2e
+      - name: Upload Playwright report (screenshots of every state)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: web/playwright-report
+          retention-days: 14

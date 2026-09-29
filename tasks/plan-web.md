@@ -39,8 +39,8 @@ After that: screen parity, the PWA features (installable, works offline), and fi
 ### PR 1: Walking skeleton
 - [x] Task 3: Scaffold `web/` (Vite, TypeScript, test runners)
 - [x] Task 4: Proxy client and ball state machine, test-first
-- [ ] Task 5: Placeholder UI wired end to end, plus E2E tests for all four outcomes
-- [ ] Task 6: CI workflow, test job only, on PRs and `main`
+- [x] Task 5: Placeholder UI wired end to end, plus E2E tests for all four outcomes
+- [x] Task 6: CI workflow, test job only, on PRs and `main`
 
 ### Checkpoint A
 - [ ] `npm test`, `typecheck`, `e2e` and `build` are green locally and in CI on the PR
