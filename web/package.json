@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "test": "node --test \"src/**/*.test.ts\"",
     "typecheck": "tsc --noEmit",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "icons": "node scripts/make-icons.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",

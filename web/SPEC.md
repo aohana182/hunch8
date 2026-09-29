@@ -74,13 +74,13 @@ One workflow, `.github/workflows/web.yml`. It runs only when `web/**` or the wor
 | `push` → `main` (a merged PR) | `test` (same as above), then `deploy`, which needs `test` to pass: build with `VITE_PROXY_URL` set from the repo variable `VITEURL`, then `wrangler pages deploy dist --project-name hunch8 --branch main` via `cloudflare/wrangler-action`. | **Yes**, to production `https://hunch8.pages.dev`. |
 
 One-time setup:
-- **Cloudflare Pages project:** created once with `wrangler pages project create hunch8 --production-branch main`, by any member of the account.
+- **Cloudflare Pages project:** the `deploy` job creates `hunch8` (production branch `main`) on its first run if it does not exist, so no manual step.
 - **Cloudflare API token:** scoped to *Account → Cloudflare Pages → Edit* on the Android author's account.
 - **GitHub repo settings** (only the repo owner can add these on a personal-account repo):
   - Secret `CLOUDFLARE_API_TOKEN`
   - Secret `CLOUDFLARE_ACCOUNT_ID`
   - Variable `VITEURL` (the Worker URL; the deploy job passes it to the build as `VITE_PROXY_URL`), so it stays out of tracked files like `local.properties` does
-- **Production environment:** the `deploy` job runs in a GitHub `production` environment, so deploy history is visible and can be gated later.
+- **Production environment:** the `deploy` job runs in a GitHub `production` environment, which GitHub creates on first use; deploy history is visible there and protection rules can be added later.
 
 ## Configuration
 

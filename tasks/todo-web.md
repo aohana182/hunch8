@@ -249,6 +249,8 @@ It also adds `manifest.webmanifest` (name and short_name "Hunch8", `display: sta
 
 ### Task 13: One-time deploy setup
 
+> **Update (2026-09-30):** secrets and `VITEURL` are set; the Pages project and the `production` environment are now created automatically by the deploy job on its first run, so nothing here is manual anymore.
+
 **Description:**
 - **Pages project:** a member runs `npx wrangler pages project create hunch8 --production-branch main`. If `hunch8` is taken, use `hunch8-web` and update `ALLOWED_ORIGINS` (PR 0 files) to match.
 - **Repo settings:** the Android author (repo owner) adds secrets `CLOUDFLARE_API_TOKEN` (Pages: Edit) and `CLOUDFLARE_ACCOUNT_ID` (**both done**), variable `VITEURL` (**done**, but its value needs `https://` or relies on the app adding it), and a `production` environment.

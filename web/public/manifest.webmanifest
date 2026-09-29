@@ -1,0 +1,15 @@
+{
+  "name": "Hunch8",
+  "short_name": "Hunch8",
+  "description": "Ask a yes/no question, tap the ball, and get one of the 20 classic answers - chosen by a decision model reading your question.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#122333",
+  "theme_color": "#122333",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

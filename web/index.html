@@ -4,19 +4,34 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#122333" />
+    <meta name="description" content="Ask a yes/no question, tap the ball, and get one of the 20 classic answers - chosen by a decision model reading your question." />
     <title>Hunch8</title>
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Hunch8" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body>
     <main class="screen">
       <header class="header">
         <h1 class="title">Hunch8</h1>
+        <button id="help-button" type="button" class="help-button" aria-label="How to use Hunch8" aria-haspopup="dialog">?</button>
       </header>
 
-      <label class="field">
-        <span class="field-label">Ask a question and provide some context</span>
-        <textarea id="question" rows="3"></textarea>
-      </label>
+      <!-- Material 3 OutlinedTextField: the label rests inside the box and
+           floats into a notch in the border once focused or filled. -->
+      <div class="field">
+        <textarea id="question" rows="3" placeholder=" " spellcheck="true"></textarea>
+        <label for="question" class="field-label">Ask a question and provide some context</label>
+        <fieldset class="field-outline" aria-hidden="true">
+          <legend><span>Ask a question and provide some context</span></legend>
+        </fieldset>
+        <button id="clear-question" type="button" class="field-clear" aria-label="Clear question" hidden>✕</button>
+      </div>
 
       <div class="ball-area">
         <div class="ball-box">
@@ -27,6 +42,33 @@
         </div>
       </div>
     </main>
+
+    <!-- HelpDialog in MainScreen.kt, text verbatim, plus the Privacy/Disclaimer line. -->
+    <dialog id="help" class="dialog" aria-labelledby="help-title">
+      <h2 id="help-title" class="dialog-title">How to use Hunch8</h2>
+      <div class="dialog-body">
+        <p>• Ask: type a yes/no question, plus any context that helps decide it.</p>
+        <p>• Trigger: tap the ball.</p>
+        <p>• Result: it rolls over and floats up one answer.</p>
+        <p>• Requirement: needs internet — every answer is a live call.</p>
+        <hr class="dialog-divider" />
+        <p class="dialog-subtitle">Powered by Jev</p>
+        <p>
+          Jev is a decision model from TypeSafe, via OpenRouter. It doesn't generate text like a chatbot — it rates
+          your question and returns a probability, which Hunch8 turns into one of the 20 classic answers. That's the
+          difference from a random pick: it's an actual judgment call.
+        </p>
+        <p class="dialog-legal">
+          <a href="https://github.com/aohana182/hunch8/blob/main/PRIVACY.md" target="_blank" rel="noopener">Privacy</a>
+          ·
+          <a href="https://github.com/aohana182/hunch8/blob/main/DISCLAIMER.md" target="_blank" rel="noopener">Disclaimer</a>
+        </p>
+      </div>
+      <form method="dialog" class="dialog-actions">
+        <button type="submit" class="text-button">Got it</button>
+      </form>
+    </dialog>
+
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

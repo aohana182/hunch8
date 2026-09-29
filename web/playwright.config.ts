@@ -20,6 +20,9 @@ export default defineConfig({
   use: {
     baseURL: `http://localhost:${PORT}`,
     screenshot: "on",
+    // page.route can't see requests that pass through a service worker, so
+    // the proxy mocks need it off; offline.spec.ts turns it back on.
+    serviceWorkers: "block",
     trace: "retain-on-failure",
   },
   projects: [

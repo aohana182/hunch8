@@ -1,7 +1,7 @@
 name: web
 
 # PRs: test on mocks only - never touches Cloudflare or the real Worker.
-# main (a merged PR): same tests; the deploy job is added with the PWA work.
+# main (a merged PR): the same tests, then deploy to Cloudflare Pages.
 on:
   pull_request:
     branches: [main]
@@ -49,3 +49,58 @@ jobs:
           name: playwright-report
           path: web/playwright-report
           retention-days: 14
+
+  deploy:
+    # Only a merge to main deploys; PRs stop after `test`.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-latest
+    environment:
+      name: production # created by GitHub on first use; add protection rules there if wanted
+      url: https://hunch8.pages.dev
+    concurrency:
+      group: web-deploy
+      cancel-in-progress: false # never cut a deploy off halfway
+    defaults:
+      run:
+        working-directory: web
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      WRANGLER_VERSION: "4.143.1"
+      PAGES_PROJECT: hunch8
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - name: Build with the Worker URL (repo variable VITEURL)
+        env:
+          VITE_PROXY_URL: ${{ vars.VITEURL }}
+        run: |
+          if [ -z "$VITE_PROXY_URL" ]; then
+            echo "::error::Repository variable VITEURL (the Worker URL) is not set - the site would only ever say 'App not responding'"
+            exit 1
+          fi
+          npm run build
+      - name: Create the Pages project on the first deploy
+        run: |
+          if npx --yes wrangler@$WRANGLER_VERSION pages project list | grep -qw "$PAGES_PROJECT"; then
+            echo "Pages project $PAGES_PROJECT exists"
+          else
+            npx --yes wrangler@$WRANGLER_VERSION pages project create "$PAGES_PROJECT" --production-branch main
+          fi
+      - name: Deploy to Cloudflare Pages
+        id: pages
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: ${{ env.WRANGLER_VERSION }}
+          workingDirectory: web
+          command: pages deploy dist --project-name ${{ env.PAGES_PROJECT }} --branch main
+      - name: Summary
+        run: echo "Deployed ${{ steps.pages.outputs.deployment-url }} (production https://hunch8.pages.dev)" >> "$GITHUB_STEP_SUMMARY"

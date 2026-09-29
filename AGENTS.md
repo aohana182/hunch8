@@ -8,10 +8,12 @@ An Android magic 8-ball app. The user types one yes/no question with any context
 - Proxy: TypeScript Cloudflare Worker, Workers KV (rate limiting), Wrangler 4
 - Model: `typesafe/jev-1.13` through `POST https://openrouter.ai/api/alpha/decisions`
 - Tests: Node's built-in test runner (`node --test`), no test framework dependency
+- Web: TypeScript + Vite PWA, Canvas 2D ball, no UI framework; Playwright E2E against a mocked proxy; deployed to Cloudflare Pages by `.github/workflows/web.yml` on merge to `main` (see `web/README.md`)
 
 ## Structure
 - `android/app/src/main/java/com/hunch8/app/` — `MainScreen.kt` (input, help dialog, state), `ui/BallComposable.kt` (ball rendering and animations), `ui/Theme.kt` (palette), `network/ProxyClient.kt` (HTTP + result mapping)
 - `proxy/src/` — `index.ts` (routing, status codes), `jev.ts` (Jev request, score→phrase bands, moderation), `rateLimit.ts` (50/IP/day via KV), `*.test.ts`
+- `web/` — PWA copy of the app: `src/ball/` ports `BallComposable.kt` (`draw.ts`, `animation.ts`, `ball.ts`), `src/proxyClient.ts` ports `ProxyClient.kt`, `public/sw.js` offline shell, `e2e/` Playwright; spec in `web/SPEC.md`
 - `evals/traces.md` — real request/response traces against the live proxy
 - `PRD.md` — requirements and design decisions; `tasks/` — plan and task log
 
@@ -35,6 +37,7 @@ Voice input, shake-to-ask (planned for v0.1), answer history, accounts, monetiza
 
 ## Gotchas
 - The proxy address comes from `hunch8.proxyUrl` in the gitignored `android/local.properties`, injected as `BuildConfig.PROXY_URL`. Missing → placeholder URL → every ask fails as "App not responding". Never hardcode a real address in tracked files.
+- The web app only works from origins in `ALLOWED_ORIGINS` (`proxy/wrangler.toml`); if the Pages URL changes, update it and redeploy the Worker. The web build reads the Worker URL from the repo variable `VITEURL`.
 - `wrangler.toml` contains the author's KV namespace id; replace it with your own (`npx wrangler kv namespace create RATE_LIMIT_KV`).
 - Test files import with an explicit `.ts` extension (required by Node's native TS stripping) and are excluded from `tsc --noEmit`.
 - On Windows, `curl` to Cloudflare can fail TLS revocation checks; use `--ssl-no-revoke`, or `node --use-system-ca` for fetch.
