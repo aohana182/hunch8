@@ -251,7 +251,7 @@ It also adds `manifest.webmanifest` (name and short_name "Hunch8", `display: sta
 
 **Description:**
 - **Pages project:** a member runs `npx wrangler pages project create hunch8 --production-branch main`. If `hunch8` is taken, use `hunch8-web` and update `ALLOWED_ORIGINS` (PR 0 files) to match.
-- **Repo settings:** the Android author (repo owner) adds secrets `CLOUDFLARE_API_TOKEN` (Pages: Edit) and `CLOUDFLARE_ACCOUNT_ID`, variable `VITE_PROXY_URL`, and a `production` environment.
+- **Repo settings:** the Android author (repo owner) adds secrets `CLOUDFLARE_API_TOKEN` (Pages: Edit) and `CLOUDFLARE_ACCOUNT_ID` (**both done**), variable `VITEURL` (**done**, but its value needs `https://` or relies on the app adding it), and a `production` environment.
 
 **Acceptance criteria:**
 - [ ] `npx wrangler pages project list` shows the project.
@@ -264,7 +264,7 @@ It also adds `manifest.webmanifest` (name and short_name "Hunch8", `display: sta
 
 ### Task 14: Deploy job and docs
 
-**Description:** Add a `deploy` job to `web.yml`: `if: github.event_name == 'push' && github.ref == 'refs/heads/main'`, `needs: test`, `environment: production`. It builds with `VITE_PROXY_URL` from `vars`, then runs `cloudflare/wrangler-action` with `pages deploy dist --project-name hunch8 --branch main`. Also write `web/README.md` (setup, config, how deploys work) and add short "Web" pointers to the root `README.md` and `AGENTS.md`.
+**Description:** Add a `deploy` job to `web.yml`: `if: github.event_name == 'push' && github.ref == 'refs/heads/main'`, `needs: test`, `environment: production`. It builds with `VITE_PROXY_URL: ${{ vars.VITEURL }}`, then runs `cloudflare/wrangler-action` with `pages deploy dist --project-name hunch8 --branch main`. Also write `web/README.md` (setup, config, how deploys work) and add short "Web" pointers to the root `README.md` and `AGENTS.md`.
 
 **Acceptance criteria:**
 - [ ] PR runs show the `deploy` job as skipped.
