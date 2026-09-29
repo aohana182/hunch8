@@ -130,7 +130,7 @@ The rate-limit store is a Workers KV namespace bound as `RATE_LIMIT_KV` in `prox
 
 - **Kotlin + Jetpack Compose** — the Android app, including the fake-3D ball drawn on a Canvas
 - **OkHttp** — the app's single HTTPS call to the proxy
-- **TypeScript + Vite** — the web app, with no UI framework. The ball is a Canvas 2D port of the Compose drawing code, and a service worker lets it open offline.
+- **TypeScript + Vite** — the web app, with no UI framework. The ball is a Canvas 2D port of the Compose drawing code, a service worker lets it open offline and updates itself quietly in the background, and on phones it can react to motion (shake to ask, the ball's face following your tilt).
 - **Cloudflare Pages + GitHub Actions** — hosting for the web app, deployed on every merge to `main`
 - **Playwright** — web end-to-end tests on Pixel 7, iPhone and desktop sizes, against a fake proxy
 - **Cloudflare Workers (TypeScript)** — the proxy that holds the API key and enforces the rate limit
@@ -149,7 +149,7 @@ The rate-limit store is a Workers KV namespace bound as `RATE_LIMIT_KV` in `prox
 | `npm run deploy` | `proxy/` | Deploy the proxy to Cloudflare |
 | `./gradlew assembleDebug` | `android/` | Build the debug APK |
 | `npm run dev` | `web/` | Run the web app locally |
-| `npm test` | `web/` | Unit tests: proxy client, screen state, animation maths, ball drawing helpers |
+| `npm test` | `web/` | Unit tests: proxy client, screen state, animation maths, ball drawing helpers, shake detection, the ball's motion physics, update timing |
 | `npm run typecheck` | `web/` | Type-check the web app |
 | `npm run e2e` | `web/` | Playwright end-to-end tests against a fake proxy (no quota used) |
 | `npm run build` | `web/` | Production build to `web/dist` |
@@ -163,7 +163,7 @@ The rate-limit store is a Workers KV namespace bound as `RATE_LIMIT_KV` in `prox
 
 ## Status
 
-**Web:** live at https://hunch8.pages.dev. It's an installable PWA copy of the Android app, in [`web/`](web/README.md), deployed automatically from `main`. It calls the same proxy, so answers, moderation and the daily limit are shared. Tested in Chromium and WebKit through Playwright, and end to end against the live proxy. Home-screen install on real Android phones and iPhones hasn't been checked yet.
+**Web:** live at https://hunch8.pages.dev. It's an installable PWA copy of the Android app, in [`web/`](web/README.md), deployed automatically from `main`. It calls the same proxy, so answers, moderation and the daily limit are shared. Tested in Chromium and WebKit through Playwright, and end to end against the live proxy. On phones it has an opt-in **phone motion** switch in the help dialog: shake to ask, and the ball's face rolls, lags and counter-rotates with your phone. Home-screen install, shake and tilt haven't been checked on real Android phones or iPhones yet (details in [web/README.md](web/README.md#pwa-behavior)).
 
 **Android:** working debug build, tested on an emulator and a real phone. Not on the Play Store. Open work (release signing, app icon, Play Integrity, input length cap, crash reporting) is tracked in [tasks/todo.md](tasks/todo.md). Design decisions are in [PRD.md](PRD.md).
 
@@ -171,7 +171,7 @@ The rate-limit store is a Workers KV namespace bound as `RATE_LIMIT_KV` in `prox
 
 ## Privacy
 
-Neither app has accounts, analytics, ads or tracking. The only thing that leaves your device is the question you tap to ask. The web app keeps your draft question in the browser tab (`sessionStorage`) so it survives a reload. It's gone when you close the tab. Full details in [PRIVACY.md](PRIVACY.md).
+Neither app has accounts, analytics, ads or tracking. The only thing that leaves your device is the question you tap to ask. The web app keeps your draft question in the browser tab (`sessionStorage`) so it survives a reload. It's gone when you close the tab. If you switch on phone motion, the web app remembers that one setting on the device (`localStorage`); the motion sensor readings are used on the phone and never sent anywhere. Full details in [PRIVACY.md](PRIVACY.md).
 
 ## Disclaimer
 
