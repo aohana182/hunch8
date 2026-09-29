@@ -14,7 +14,9 @@ html,
 body {
   margin: 0;
   min-height: 100dvh;
-  background: var(--hunch8-background);
+  /* MainActivity wraps the screen in a Material Surface, which paints
+     Hunch8Surface - measured #122333 in assets/screenshot-idle.png. */
+  background: var(--hunch8-surface);
   color: var(--hunch8-on-background);
 }
 
@@ -59,17 +61,42 @@ body {
   place-items: center;
 }
 
-/* Placeholder ball - replaced by the canvas port. */
+/* BallComposable.kt: a 300dp ball above a 36dp floor shadow (a 300 x 336 Box). */
+.ball-box {
+  position: relative;
+  width: 300px;
+  height: 336px;
+}
+
 .ball {
+  position: absolute;
+  inset: 0 0 auto 0;
   width: 300px;
   height: 300px;
-  border: none;
+  padding: 0;
+  border: 0;
   border-radius: 50%;
-  background: #111;
-  color: var(--hunch8-on-background);
-  font: inherit;
-  font-size: 20px;
-  font-weight: 700;
-  white-space: pre-line;
+  background: transparent;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent; /* indication = null on Android */
+}
+
+.ball:focus-visible {
+  outline: 2px solid var(--hunch8-amber);
+  outline-offset: 6px;
+}
+
+.ball-canvas {
+  display: block;
+  width: 300px;
+  height: 300px;
+}
+
+.ball-shadow {
+  position: absolute;
+  bottom: 0;
+  left: 30px; /* 80% of the ball width, centered */
+  width: 240px;
+  height: 36px;
+  pointer-events: none;
 }

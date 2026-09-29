@@ -48,9 +48,9 @@ After that: screen parity, the PWA features (installable, works offline), and fi
 - [ ] Review with the Android author, then merge
 
 ### PR 2: The ball
-- [ ] Task 7: Animation primitives (easing, tween, damped spring), test-first
-- [ ] Task 8: Static ball drawing (sphere, "8", window, shading, gloss, shadow)
-- [ ] Task 9: Ball states and motion (flip, reveal, bob, shake, triangles, ✕), replacing the placeholder
+- [x] Task 7: Animation primitives (easing, tween, damped spring), test-first
+- [x] Task 8: Static ball drawing (sphere, "8", window, shading, gloss, shadow)
+- [x] Task 9: Ball states and motion (flip, reveal, bob, shake, triangles, ✕), replacing the placeholder
 
 ### Checkpoint B
 - [ ] Idle and answered screenshots next to `assets/screenshot-*.png`: the Android author confirms they match

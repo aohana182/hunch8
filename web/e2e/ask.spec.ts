@@ -12,6 +12,11 @@ async function ask(page: Page, text = "Should I take an umbrella? It's pouring."
   await ball(page).click();
 }
 
+// The ball bobs forever, so Playwright never sees it "stable" and won't click
+// it. With reduced motion the bob and shake stop (a real feature, see the spec);
+// the last test below covers tapping the ball while it moves.
+test.use({ reducedMotion: "reduce" });
+
 test.beforeEach(async ({ page }) => {
   await page.goto("/");
   await expect(ball(page)).toHaveAccessibleName("Magic ball. Tap to ask.");
@@ -82,4 +87,16 @@ test("asking again after an answer works", async ({ page }) => {
   await expect(ball(page)).toHaveAccessibleName("The ball says: Yes");
   await ball(page).click();
   await expect(ball(page)).toHaveAccessibleName("The ball says: Very doubtful");
+});
+
+test.describe("with motion on", () => {
+  test.use({ reducedMotion: "no-preference" });
+
+  test("tapping the bobbing ball still asks and answers", async ({ page }) => {
+    await mockProxy(page, () => ({ status: 200, body: { answer: "Signs point to yes", confidence: 0.9 } }));
+    await question(page).fill("Should I go?");
+    // force: skip Playwright's "stable" wait - a person taps a moving ball just fine.
+    await ball(page).click({ force: true });
+    await expect(ball(page)).toHaveAccessibleName("The ball says: Signs point to yes");
+  });
 });
