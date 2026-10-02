@@ -1,9 +1,13 @@
-import { askJev, JevBlockedError } from "./jev";
-import { checkAndIncrement, type RateLimitEnv } from "./rateLimit";
-import { serveWithCors, type CorsEnv } from "./cors";
+import { askJev, JevBlockedError } from "./jev.ts";
+import { checkAndIncrement, type RateLimitEnv } from "./rateLimit.ts";
+import { serveWithCors, type CorsEnv } from "./cors.ts";
+
+export const MAX_QUESTION_LENGTH = 500;
+export const MAX_BACKGROUND_LENGTH = 1000;
 
 export interface Env extends RateLimitEnv, CorsEnv {
   OPENROUTER_API_KEY: string;
+  ENVIRONMENT?: string;
 }
 
 export default {
@@ -12,30 +16,53 @@ export default {
   },
 };
 
-async function handle(request: Request, env: Env): Promise<Response> {
+export async function handle(request: Request, env: Env): Promise<Response> {
   if (request.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
   }
 
-  const clientId = request.headers.get("cf-connecting-ip") ?? "unknown";
+  const rawIp = request.headers.get("cf-connecting-ip")?.trim();
+  const clientId = rawIp || (env.ENVIRONMENT === "production" ? null : "unknown");
+  if (!clientId) {
+    return Response.json({ error: "missing client identifier" }, { status: 400 });
+  }
+
   const allowed = await checkAndIncrement(env, clientId);
   if (!allowed) {
     return Response.json({ error: "daily limit reached" }, { status: 429 });
   }
 
-  let body: { question?: string; background?: string };
+  let body: unknown;
   try {
     body = await request.json();
   } catch {
     return Response.json({ error: "invalid JSON body" }, { status: 400 });
   }
 
-  if (!body.question) {
+  if (typeof body !== "object" || body === null) {
+    return Response.json({ error: "invalid JSON body" }, { status: 400 });
+  }
+
+  const { question, background } = body as { question?: unknown; background?: unknown };
+
+  if (typeof question !== "string" || question.trim().length === 0) {
     return Response.json({ error: "question is required" }, { status: 400 });
   }
 
+  if (question.length > MAX_QUESTION_LENGTH) {
+    return Response.json({ error: "question exceeds maximum length" }, { status: 413 });
+  }
+
+  if (background !== undefined && typeof background !== "string") {
+    return Response.json({ error: "background must be a string" }, { status: 400 });
+  }
+
+  if (typeof background === "string" && background.length > MAX_BACKGROUND_LENGTH) {
+    return Response.json({ error: "background exceeds maximum length" }, { status: 413 });
+  }
+
   try {
-    const result = await askJev(env.OPENROUTER_API_KEY, body.question, body.background ?? "");
+    const result = await askJev(env.OPENROUTER_API_KEY, question.trim(), (background as string | undefined)?.trim() ?? "");
     return Response.json(result);
   } catch (err) {
     if (err instanceof JevBlockedError) {

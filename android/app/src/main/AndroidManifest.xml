@@ -4,7 +4,8 @@
 
     <application
         android:label="Hunch8"
-        android:theme="@style/Theme.Hunch8">
+        android:theme="@style/Theme.Hunch8"
+        android:usesCleartextTraffic="false">
         <activity
             android:name=".MainActivity"
             android:exported="true">
