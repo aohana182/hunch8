@@ -3,10 +3,10 @@ name: proxy
 on:
   pull_request:
     branches: [main]
-    paths: ["proxy/**", ".github/workflows/proxy.yml"]
+    paths: ["proxy/**", "scripts/**", ".github/workflows/proxy.yml"]
   push:
     branches: [main]
-    paths: ["proxy/**", ".github/workflows/proxy.yml"]
+    paths: ["proxy/**", "scripts/**", ".github/workflows/proxy.yml"]
 
 concurrency:
   group: proxy-${{ github.ref }}

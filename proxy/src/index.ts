@@ -4,6 +4,7 @@ import { serveWithCors, type CorsEnv } from "./cors.ts";
 
 export const MAX_QUESTION_LENGTH = 500;
 export const MAX_BACKGROUND_LENGTH = 1000;
+export const MAX_BODY_BYTES = 16 * 1024; // 16 KB
 
 export interface Env extends RateLimitEnv, CorsEnv {
   OPENROUTER_API_KEY: string;
@@ -22,7 +23,8 @@ export async function handle(request: Request, env: Env): Promise<Response> {
   }
 
   const rawIp = request.headers.get("cf-connecting-ip")?.trim();
-  const clientId = rawIp || (env.ENVIRONMENT === "production" ? null : "unknown");
+  // Secure default: require client IP unless explicitly running in a local development environment.
+  const clientId = rawIp || (env.ENVIRONMENT === "development" ? "unknown" : null);
   if (!clientId) {
     return Response.json({ error: "missing client identifier" }, { status: 400 });
   }
@@ -32,9 +34,25 @@ export async function handle(request: Request, env: Env): Promise<Response> {
     return Response.json({ error: "daily limit reached" }, { status: 429 });
   }
 
+  const contentLength = request.headers.get("content-length");
+  if (contentLength && parseInt(contentLength, 10) > MAX_BODY_BYTES) {
+    return Response.json({ error: "request payload too large" }, { status: 413 });
+  }
+
+  let rawBody: string;
+  try {
+    rawBody = await request.text();
+  } catch {
+    return Response.json({ error: "invalid request body" }, { status: 400 });
+  }
+
+  if (new TextEncoder().encode(rawBody).length > MAX_BODY_BYTES) {
+    return Response.json({ error: "request payload too large" }, { status: 413 });
+  }
+
   let body: unknown;
   try {
-    body = await request.json();
+    body = JSON.parse(rawBody);
   } catch {
     return Response.json({ error: "invalid JSON body" }, { status: 400 });
   }

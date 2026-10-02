@@ -1,6 +1,6 @@
-import { test, mock } from "node:test";
+import { test } from "node:test";
 import assert from "node:assert/strict";
-import { handle, type Env, MAX_QUESTION_LENGTH, MAX_BACKGROUND_LENGTH } from "./index.ts";
+import { handle, type Env, MAX_QUESTION_LENGTH, MAX_BACKGROUND_LENGTH, MAX_BODY_BYTES } from "./index.ts";
 
 function fakeEnv(overrides: Partial<Env> = {}): Env {
   const store = new Map<string, string>();
@@ -18,6 +18,7 @@ function fakeEnv(overrides: Partial<Env> = {}): Env {
 }
 
 function postRequest(body: unknown, headers: Record<string, string> = {}): Request {
+  const serialized = typeof body === "string" ? body : JSON.stringify(body);
   return new Request("https://proxy.example/", {
     method: "POST",
     headers: {
@@ -25,7 +26,7 @@ function postRequest(body: unknown, headers: Record<string, string> = {}): Reque
       "cf-connecting-ip": "1.2.3.4",
       ...headers,
     },
-    body: typeof body === "string" ? body : JSON.stringify(body),
+    body: serialized,
   });
 }
 
@@ -35,8 +36,8 @@ test("rejects non-POST requests with 405", async () => {
   assert.equal(res.status, 405);
 });
 
-test("missing cf-connecting-ip in production returns 400", async () => {
-  const env = fakeEnv({ ENVIRONMENT: "production" });
+test("missing cf-connecting-ip returns 400 by default (secure production default)", async () => {
+  const env = fakeEnv(); // ENVIRONMENT is undefined by default
   const req = new Request("https://proxy.example/", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -46,6 +47,39 @@ test("missing cf-connecting-ip in production returns 400", async () => {
   assert.equal(res.status, 400);
   const data = await res.json<{ error: string }>();
   assert.equal(data.error, "missing client identifier");
+});
+
+test("missing cf-connecting-ip falls back to unknown only when ENVIRONMENT is development", async () => {
+  const env = fakeEnv({ ENVIRONMENT: "development" });
+  const req = new Request("https://proxy.example/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ question: "" }),
+  });
+  const res = await handle(req, env);
+  // It passed client ID check and failed on question validation
+  assert.equal(res.status, 400);
+  const data = await res.json<{ error: string }>();
+  assert.equal(data.error, "question is required");
+});
+
+test("request with oversized Content-Length returns 413 early", async () => {
+  const env = fakeEnv();
+  const req = postRequest({ question: "Valid?" }, { "content-length": String(MAX_BODY_BYTES + 100) });
+  const res = await handle(req, env);
+  assert.equal(res.status, 413);
+  const data = await res.json<{ error: string }>();
+  assert.equal(data.error, "request payload too large");
+});
+
+test("request body exceeding 16 KB returns 413 before parsing fields", async () => {
+  const env = fakeEnv();
+  const largeIgnoredField = "x".repeat(MAX_BODY_BYTES + 10);
+  const req = postRequest({ question: "Short question?", ignored: largeIgnoredField });
+  const res = await handle(req, env);
+  assert.equal(res.status, 413);
+  const data = await res.json<{ error: string }>();
+  assert.equal(data.error, "request payload too large");
 });
 
 test("invalid JSON returns 400", async () => {

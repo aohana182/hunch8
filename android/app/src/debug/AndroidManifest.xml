@@ -1,0 +1,10 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Allow cleartext HTTP connections only in debug builds (e.g. to local mock proxy at 10.0.2.2:8787).
+         Release builds strictly enforce android:usesCleartextTraffic="false" from src/main/AndroidManifest.xml. -->
+    <application
+        android:usesCleartextTraffic="true"
+        tools:replace="android:usesCleartextTraffic" />
+
+</manifest>

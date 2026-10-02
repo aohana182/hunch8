@@ -6,7 +6,7 @@
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: accelerometer=(self), gyroscope=(self)
-  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://*.workers.dev https://*.pages.dev http://localhost:* ws://localhost:*; img-src 'self' data:; object-src 'none'; base-uri 'self';
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://*.workers.dev https://*.pages.dev; img-src 'self' data:; object-src 'none'; base-uri 'self';
 
 /
   Cache-Control: no-cache

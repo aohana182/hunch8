@@ -32,5 +32,5 @@ jobs:
         run: echo "hunch8.proxyUrl=https://mock-worker.workers.dev" > local.properties
       - name: Make gradlew executable
         run: chmod +x gradlew
-      - name: Build debug APK
-        run: ./gradlew assembleDebug --no-daemon
+      - name: Lint and build debug APK
+        run: ./gradlew lintDebug assembleDebug --no-daemon
