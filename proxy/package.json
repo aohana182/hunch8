@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
+    "dev:mock": "node ../scripts/mock-proxy.mjs",
     "deploy": "wrangler deploy",
-    "test": "node --test src/*.test.ts"
+    "test": "node --test src/*.test.ts ../scripts/*.test.mjs"
   },
   "devDependencies": {
     "wrangler": "^4.141.0",

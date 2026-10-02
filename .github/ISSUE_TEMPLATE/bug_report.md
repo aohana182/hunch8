@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Something is broken
+about: Something is broken in Android, Web PWA, or the Proxy
 labels: bug
 ---
 
@@ -11,11 +11,19 @@ labels: bug
 **Steps to reproduce**
 1. 
 2. 
+3. 
 
-**Environment**
-- Device / Android version:
-- App version or commit:
+**Platform / Environment**
+- [ ] Android App
+  - Device / Android version:
+  - App version or commit:
+- [ ] Web PWA
+  - Browser & version:
+  - Operating System:
+  - Device motion / tilt supported: [Yes / No / Untested]
+- [ ] Worker Proxy
+  - Endpoint / environment:
 
-**Logs or screenshots**
+**Logs, Traces, or Screenshots**
 
-_Please don't paste personal information or API keys._
+_Please ensure you do not paste API keys, authorization tokens, or sensitive personal data._

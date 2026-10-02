@@ -6,13 +6,22 @@
 
 [The problem it solves or requirement it satisfies]
 
-## How verified
+## Verification Checklist
 
-- [ ] Tests pass (`cd proxy && npm test`)
-- [ ] Type-check passes (`cd proxy && npx tsc --noEmit`)
-- [ ] App builds (`cd android && ./gradlew assembleDebug`)
-- [ ] Manually tested: [describe what you checked, on emulator or device]
+Please verify the components affected by your changes:
 
-## Screenshots
+- [ ] **Proxy:** `cd proxy && npm test && npx tsc --noEmit`
+- [ ] **Web:** `cd web && npm test && npm run typecheck && npm run build`
+- [ ] **Android:** `cd android && ./gradlew assembleDebug`
+- [ ] **Playwright E2E (if web UI touched):** `cd web && npm run e2e`
+- [ ] **Manual verification:** [Describe what you tested and how]
 
-[For UI changes — before/after or new state]
+## Security & Quality
+
+- [ ] No secrets, private tokens, or API keys are committed or referenced.
+- [ ] No cleartext / non-TLS endpoints added to client configurations.
+- [ ] Answers remain constrained strictly to the 20 classic 8-ball phrases.
+
+## Screenshots / Evidence
+
+[Attach screenshot or terminal output for UI or workflow changes]

@@ -42,3 +42,7 @@ Voice input, shake-to-ask (planned for v0.1), answer history, accounts, monetiza
 - Test files import with an explicit `.ts` extension (required by Node's native TS stripping) and are excluded from `tsc --noEmit`.
 - On Windows, `curl` to Cloudflare can fail TLS revocation checks; use `--ssl-no-revoke`, or `node --use-system-ca` for fetch.
 - The Android 12+ splash screen shows a default icon for a few seconds on cold start; screenshots taken too early show that, not a crash.
+- The proxy enforces a 16 KB body limit and 500-char question cap before JSON parsing. Missing `cf-connecting-ip` is rejected with 400 in production (`ENVIRONMENT !== "development"`). The web client reflects this with `maxlength="500"`, `canAsk()` checks, and an M3 supporting text counter (`0 / 500`).
+- Android release builds enforce HTTPS (`usesCleartextTraffic="false"`); `src/debug/AndroidManifest.xml` overrides this for the local mock server (`http://10.0.2.2:8787`). Run the mock with `npm run dev:mock` in `proxy/`.
+- On Windows development environments where Playwright browser binaries stall downloading, run local E2E tests with `PW_CHROMIUM_CHANNEL=msedge` (`npx playwright test --project=pixel-7`), leaving WebKit and multi-browser matrix verification for GitHub Actions CI.
+

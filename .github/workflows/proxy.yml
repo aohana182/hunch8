@@ -1,0 +1,33 @@
+name: proxy
+
+on:
+  pull_request:
+    branches: [main]
+    paths: ["proxy/**", "scripts/**", ".github/workflows/proxy.yml"]
+  push:
+    branches: [main]
+    paths: ["proxy/**", "scripts/**", ".github/workflows/proxy.yml"]
+
+concurrency:
+  group: proxy-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: proxy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: proxy/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npx tsc --noEmit
