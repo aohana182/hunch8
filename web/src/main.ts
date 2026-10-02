@@ -6,12 +6,13 @@ import { setUpUpdates } from "./pwaUpdate.ts";
 import { loadScreen, saveScreen } from "./session.ts";
 import { createShakeDetector } from "./shake.ts";
 import { motionSupported, setUpMotion } from "./motionControl.ts";
-import { ballDescription, canAsk, stateForResult, type ScreenState } from "./state.ts";
+import { ballDescription, canAsk, stateForResult, MAX_QUESTION_LENGTH, type ScreenState } from "./state.ts";
 
 const PROXY_URL = proxyUrlFrom(import.meta.env.VITE_PROXY_URL);
 
 const questionInput = document.querySelector<HTMLTextAreaElement>("#question")!;
 const field = questionInput.closest<HTMLElement>(".field")!;
+const charCounter = document.querySelector<HTMLSpanElement>("#char-counter");
 const clearButton = document.querySelector<HTMLButtonElement>("#clear-question")!;
 const ballButton = document.querySelector<HTMLButtonElement>("#ball")!;
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -45,11 +46,17 @@ function render() {
 
 // minLines = 3, maxLines = 6: grow with the text, then scroll.
 function renderField() {
-  const filled = questionInput.value !== "";
+  const len = questionInput.value.length;
+  const filled = len > 0;
   field.classList.toggle("is-filled", filled);
   clearButton.hidden = !filled;
   questionInput.style.height = "auto";
   questionInput.style.height = `${questionInput.scrollHeight}px`;
+  if (charCounter) {
+    charCounter.textContent = `${len} / ${MAX_QUESTION_LENGTH}`;
+    charCounter.classList.toggle("is-warning", len >= 450 && len < MAX_QUESTION_LENGTH);
+    charCounter.classList.toggle("is-full", len >= MAX_QUESTION_LENGTH);
+  }
 }
 
 questionInput.addEventListener("input", () => {

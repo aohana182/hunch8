@@ -61,3 +61,23 @@ test("no horizontal scrolling on a 360 px wide phone", async ({ page }) => {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBe(0);
 });
+
+test("character counter shows current length up to 500 and textarea enforces maxlength", async ({ page }) => {
+  await page.goto("/");
+  const counter = page.locator("#char-counter");
+  await expect(counter).toHaveText("0 / 500");
+
+  await question(page).fill("Should I accept this offer?");
+  await expect(counter).toHaveText("27 / 500");
+
+  // Filling up to the 500 limit
+  const exact = "a".repeat(500);
+  await question(page).fill(exact);
+  await expect(question(page)).toHaveValue(exact);
+  await expect(counter).toHaveText("500 / 500");
+  await expect(counter).toHaveClass(/is-full/);
+
+  // Clear button resets counter
+  await page.getByRole("button", { name: "Clear question" }).click();
+  await expect(counter).toHaveText("0 / 500");
+});

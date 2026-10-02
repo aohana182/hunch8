@@ -83,9 +83,40 @@ body {
 }
 
 /* OutlinedTextField: label = titleMedium, text = titleLarge, 3-6 lines. */
+.field-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .field {
   position: relative;
   display: grid;
+}
+
+.field-supporting {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 4px;
+}
+
+.char-counter {
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.4px;
+  color: var(--m3-on-surface-variant);
+  font-variant-numeric: tabular-nums;
+  transition: color 150ms ease;
+}
+
+.char-counter.is-warning {
+  color: var(--hunch8-amber);
+  font-weight: 500;
+}
+
+.char-counter.is-full {
+  color: #e57373;
+  font-weight: 600;
 }
 
 .field textarea {

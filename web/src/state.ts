@@ -9,10 +9,12 @@ export interface ScreenState {
   answerText: string;
 }
 
+export const MAX_QUESTION_LENGTH = 500;
+
 // The ball is the only trigger, so this is also the debounce: a second tap
 // while a request is in flight is ignored rather than queued.
 export function canAsk(question: string, ballState: BallState): boolean {
-  return question.trim() !== "" && ballState !== "THINKING";
+  return question.trim() !== "" && question.length <= MAX_QUESTION_LENGTH && ballState !== "THINKING";
 }
 
 // Only a success replaces the answer text; the other states draw their own

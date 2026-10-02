@@ -24,13 +24,18 @@
 
       <!-- Material 3 OutlinedTextField: the label rests inside the box and
            floats into a notch in the border once focused or filled. -->
-      <div class="field">
-        <textarea id="question" rows="3" placeholder=" " spellcheck="true"></textarea>
-        <label for="question" class="field-label">Ask a question and provide some context</label>
-        <fieldset class="field-outline" aria-hidden="true">
-          <legend><span>Ask a question and provide some context</span></legend>
-        </fieldset>
-        <button id="clear-question" type="button" class="field-clear" aria-label="Clear question" hidden>✕</button>
+      <div class="field-container">
+        <div class="field">
+          <textarea id="question" rows="3" placeholder=" " spellcheck="true" maxlength="500" aria-describedby="char-counter"></textarea>
+          <label for="question" class="field-label">Ask a question and provide some context</label>
+          <fieldset class="field-outline" aria-hidden="true">
+            <legend><span>Ask a question and provide some context</span></legend>
+          </fieldset>
+          <button id="clear-question" type="button" class="field-clear" aria-label="Clear question" hidden>✕</button>
+        </div>
+        <div class="field-supporting">
+          <span id="char-counter" class="char-counter" aria-live="polite">0 / 500</span>
+        </div>
       </div>
 
       <div class="ball-area">

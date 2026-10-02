@@ -8,6 +8,13 @@ test("a blank or whitespace-only question can't be asked", () => {
   assert.equal(canAsk("Should I go?", "IDLE"), true);
 });
 
+test("a question longer than 500 characters cannot be asked", () => {
+  const valid = "a".repeat(500);
+  const tooLong = "a".repeat(501);
+  assert.equal(canAsk(valid, "IDLE"), true);
+  assert.equal(canAsk(tooLong, "IDLE"), false);
+});
+
 test("tapping while the ball is thinking does nothing (no double-fire)", () => {
   assert.equal(canAsk("Should I go?", "THINKING"), false);
 });
