@@ -20,6 +20,8 @@ An Android magic 8-ball app. The user types one yes/no question with any context
 ## How to run
 ```sh
 cd proxy && npm install && npm test && npm run dev
+cd proxy && npm run dev:mock   # offline mock proxy for web/android testing (http://localhost:8787)
+cd web && npm install && npm test && npm run typecheck && npm run build
 cd android && ./gradlew assembleDebug
 ```
 
@@ -31,6 +33,8 @@ cd android && ./gradlew assembleDebug
 - Moderation is a second `noul` question in the same Jev request (no extra call); flagged → HTTP 422 → red ✕ on the ball.
 - The ball is fake 3D: a fixed circle with decals moving across it with cos() foreshortening. Do not tilt the whole disc with `rotationX/Y`; that turns a sphere into an ellipse.
 - No anti-prompt-injection code: tested three injection attempts and all failed, because users only control `state`, never `instructions`/`criteria`, and the output is a number.
+- Pre-parse request boundaries: 16 KB payload cap, 500-char max question length, 1,000-char background limit, and strict type verification.
+- Defensive headers: Web client serves strict CSP and frame-ancestors via `web/public/_headers`. Android release builds enforce `usesCleartextTraffic="false"`.
 
 ## Out of scope
 Voice input, shake-to-ask (planned for v0.1), answer history, accounts, monetization, answers outside the 20 classic phrases.
@@ -43,6 +47,7 @@ Voice input, shake-to-ask (planned for v0.1), answer history, accounts, monetiza
 - On Windows, `curl` to Cloudflare can fail TLS revocation checks; use `--ssl-no-revoke`, or `node --use-system-ca` for fetch.
 - The Android 12+ splash screen shows a default icon for a few seconds on cold start; screenshots taken too early show that, not a crash.
 - The proxy enforces a 16 KB body limit and 500-char question cap before JSON parsing. Missing `cf-connecting-ip` is rejected with 400 in production (`ENVIRONMENT !== "development"`). The web client reflects this with `maxlength="500"`, `canAsk()` checks, and an M3 supporting text counter (`0 / 500`).
+- Note on Android parity: [MainScreen.kt](file:///c:/Projects/the%20eight%20ball/android/app/src/main/java/com/hunch8/app/MainScreen.kt) does not yet cap input at 500 chars in the UI; oversized inputs get rejected by the proxy with 400 (mapping to "App not responding").
 - Android release builds enforce HTTPS (`usesCleartextTraffic="false"`); `src/debug/AndroidManifest.xml` overrides this for the local mock server (`http://10.0.2.2:8787`). Run the mock with `npm run dev:mock` in `proxy/`.
 - On Windows development environments where Playwright browser binaries stall downloading, run local E2E tests with `PW_CHROMIUM_CHANNEL=msedge` (`npx playwright test --project=pixel-7`), leaving WebKit and multi-browser matrix verification for GitHub Actions CI.
 
